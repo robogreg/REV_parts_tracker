@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isRevUser() {
+      return request.auth != null &&
+             request.auth.token.email.matches('.*@revrobotics\\.com');
+    }
+
+    match /events/{eventId} {
+      allow read, write: if isRevUser();
+
+      match /inventory/{itemId} {
+        allow read, write: if isRevUser();
+      }
+      match /teams/{teamId} {
+        allow read, write: if isRevUser();
+      }
+      match /snapshots/{snapId} {
+        allow read, write: if isRevUser();
+      }
+    }
+
+    match /transactions/{txId} {
+      allow read, write: if isRevUser();
+    }
+
+    match /parts/{partId} {
+      allow read: if isRevUser();
+      allow write: if isRevUser();
+    }
+
+    match /adminLogs/{logId} {
+      allow read, write: if isRevUser();
+    }
+  }
+}
