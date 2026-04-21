@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
@@ -119,7 +119,7 @@ export function CheckoutModal({ open, onClose, onSuccess }: CheckoutModalProps) 
       <div className="px-6 py-4 space-y-5">
         {/* Team */}
         <div>
-          <label className="block text-sm font-medium text-[#9CA3AF] mb-1.5">
+          <label className="block text-sm font-medium text-[var(--tx-muted)] mb-1.5">
             Team <span className="text-red-400">*</span>
           </label>
           <TeamSearch
@@ -132,7 +132,7 @@ export function CheckoutModal({ open, onClose, onSuccess }: CheckoutModalProps) 
 
         {/* Contact Name */}
         <div>
-          <label className="block text-sm font-medium text-[#9CA3AF] mb-1.5">
+          <label className="block text-sm font-medium text-[var(--tx-muted)] mb-1.5">
             Contact Name <span className="text-red-400">*</span>
           </label>
           <input
@@ -140,14 +140,14 @@ export function CheckoutModal({ open, onClose, onSuccess }: CheckoutModalProps) 
             value={contactName}
             onChange={(e) => setContactName(e.target.value)}
             placeholder="Full name"
-            className={`w-full bg-[#242424] border rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#9CA3AF] outline-none focus:border-[#FF6B00] transition-colors ${errors.contactName ? 'border-red-600' : 'border-[#2E2E2E]'}`}
+            className={`w-full bg-[var(--bg-input)] border rounded-lg px-3 py-2.5 text-sm text-[var(--tx-primary)] placeholder-[var(--tx-muted)] outline-none focus:border-[#FF6B00] transition-colors ${errors.contactName ? 'border-red-600' : 'border-[var(--bg-hover)]'}`}
           />
           {errors.contactName && <p className="text-xs text-red-400 mt-1">{errors.contactName}</p>}
         </div>
 
         {/* Contact Email */}
         <div>
-          <label className="block text-sm font-medium text-[#9CA3AF] mb-1.5">
+          <label className="block text-sm font-medium text-[var(--tx-muted)] mb-1.5">
             Contact Email <span className="text-red-400">*</span>
           </label>
           <input
@@ -155,42 +155,42 @@ export function CheckoutModal({ open, onClose, onSuccess }: CheckoutModalProps) 
             value={contactEmail}
             onChange={(e) => setContactEmail(e.target.value)}
             placeholder="student@team.org"
-            className={`w-full bg-[#242424] border rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#9CA3AF] outline-none focus:border-[#FF6B00] transition-colors ${errors.contactEmail ? 'border-red-600' : 'border-[#2E2E2E]'}`}
+            className={`w-full bg-[var(--bg-input)] border rounded-lg px-3 py-2.5 text-sm text-[var(--tx-primary)] placeholder-[var(--tx-muted)] outline-none focus:border-[#FF6B00] transition-colors ${errors.contactEmail ? 'border-red-600' : 'border-[var(--bg-hover)]'}`}
           />
           {errors.contactEmail && <p className="text-xs text-red-400 mt-1">{errors.contactEmail}</p>}
         </div>
 
         {/* Reason */}
         <div>
-          <label className="block text-sm font-medium text-[#9CA3AF] mb-1.5">Reason</label>
+          <label className="block text-sm font-medium text-[var(--tx-muted)] mb-1.5">Reason</label>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             maxLength={200}
             rows={2}
             placeholder="Why are these parts being given? (optional)"
-            className={`w-full bg-[#242424] border rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#9CA3AF] outline-none focus:border-[#FF6B00] transition-colors resize-none ${errors.reason ? 'border-red-600' : 'border-[#2E2E2E]'}`}
+            className={`w-full bg-[var(--bg-input)] border rounded-lg px-3 py-2.5 text-sm text-[var(--tx-primary)] placeholder-[var(--tx-muted)] outline-none focus:border-[#FF6B00] transition-colors resize-none ${errors.reason ? 'border-red-600' : 'border-[var(--bg-hover)]'}`}
           />
           <div className="flex justify-between">
             {errors.reason && <p className="text-xs text-red-400 mt-1">{errors.reason}</p>}
-            <p className="text-xs text-[#9CA3AF] mt-1 ml-auto">{reason.length}/200</p>
+            <p className="text-xs text-[var(--tx-muted)] mt-1 ml-auto">{reason.length}/200</p>
           </div>
         </div>
 
         {/* Cart summary */}
         <div>
-          <h3 className="text-sm font-medium text-[#9CA3AF] mb-2">
+          <h3 className="text-sm font-medium text-[var(--tx-muted)] mb-2">
             Items ({cartItems.reduce((s, i) => s + i.quantity, 0)} units)
           </h3>
-          <div className="bg-[#0F0F0F] rounded-lg divide-y divide-[#2E2E2E]">
+          <div className="bg-[var(--bg-base)] rounded-lg divide-y divide-[var(--bg-hover)]">
             {cartItems.map((item) => (
               <div key={item.part.id} className="flex items-center justify-between px-3 py-2.5">
                 <div>
-                  <p className="text-sm text-white">{item.part.name}</p>
-                  <p className="text-xs font-mono text-[#9CA3AF]">{item.part.sku}</p>
+                  <p className="text-sm text-[var(--tx-primary)]">{item.part.name}</p>
+                  <p className="text-xs font-mono text-[var(--tx-muted)]">{item.part.sku}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-white">×{item.quantity}</span>
+                  <span className="text-sm font-semibold text-[var(--tx-primary)]">×{item.quantity}</span>
                   {item.isLoaner && <Lock className="w-3.5 h-3.5 text-[#FF6B00]" />}
                 </div>
               </div>
@@ -210,9 +210,9 @@ export function CheckoutModal({ open, onClose, onSuccess }: CheckoutModalProps) 
         <button
           onClick={handleSubmit}
           disabled={submitting || cartItems.length === 0}
-          className="w-full py-3 rounded-xl bg-[#FF6B00] hover:bg-[#e55a00] text-white font-display text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full py-3 rounded-xl bg-[#FF6B00] hover:bg-[#e55a00] text-[var(--tx-primary)] font-display text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          {submitting ? <Spinner size="sm" className="text-white" /> : null}
+          {submitting ? <Spinner size="sm" className="text-[var(--tx-primary)]" /> : null}
           Give Parts{selectedTeam ? ` to Team ${selectedTeam.teamNumber}` : ''}
         </button>
       </div>

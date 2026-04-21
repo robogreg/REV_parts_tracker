@@ -1,8 +1,9 @@
 import { getApps, getApp, initializeApp, cert, App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 
 let adminApp: App;
+let _db: Firestore | null = null;
 
 function getAdminApp(): App {
   if (getApps().length > 0) return getApp();
@@ -26,4 +27,13 @@ function getAdminApp(): App {
 }
 
 export const adminAuth = () => getAuth(getAdminApp());
-export const adminDb = () => getFirestore(getAdminApp());
+
+// Return a singleton Firestore instance.
+// settings() can only be called once before any Firestore operations —
+// caching the instance here prevents "settings can no longer be changed" errors.
+export function adminDb(): Firestore {
+  if (_db) return _db;
+  _db = getFirestore(getAdminApp());
+  _db.settings({ ignoreUndefinedProperties: true });
+  return _db;
+}

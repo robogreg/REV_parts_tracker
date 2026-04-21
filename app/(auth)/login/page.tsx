@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { signInWithPopup } from 'firebase/auth';
@@ -34,23 +34,23 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-10">
           <div className="w-12 h-12 bg-[#FF6B00] rounded-lg flex items-center justify-center">
-            <span className="font-display text-white text-lg">RP</span>
+            <span className="font-display text-[var(--tx-primary)] text-lg">RP</span>
           </div>
           <div>
-            <div className="font-display text-2xl text-white">REV Parts Pit</div>
-            <div className="text-sm text-[#9CA3AF]">Event Parts Distribution</div>
+            <div className="font-display text-2xl text-[var(--tx-primary)]">REV Parts Pit</div>
+            <div className="text-sm text-[var(--tx-muted)]">Event Parts Distribution</div>
           </div>
         </div>
 
         {/* Card */}
-        <div className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-2xl p-8">
-          <h1 className="font-display text-xl text-white mb-2">Sign In</h1>
-          <p className="text-[#9CA3AF] text-sm mb-8">
+        <div className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-2xl p-8">
+          <h1 className="font-display text-xl text-[var(--tx-primary)] mb-2">Sign In</h1>
+          <p className="text-[var(--tx-muted)] text-sm mb-8">
             Use your REV Robotics Google account to continue.
           </p>
 
@@ -91,7 +91,7 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <p className="text-center text-[#9CA3AF] text-xs mt-6">
+        <p className="text-center text-[var(--tx-muted)] text-xs mt-6">
           Restricted to @revrobotics.com accounts
         </p>
       </div>

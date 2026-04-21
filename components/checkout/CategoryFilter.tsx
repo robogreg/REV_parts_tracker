@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { cn } from '@/lib/utils';
 
@@ -16,8 +16,8 @@ export function CategoryFilter({ categories, selected, onSelect }: CategoryFilte
         className={cn(
           'flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors min-h-0 min-w-0',
           selected === null
-            ? 'bg-[#FF6B00] text-white'
-            : 'bg-[#242424] text-[#9CA3AF] hover:bg-[#2E2E2E] hover:text-white'
+            ? 'bg-[#FF6B00] text-[var(--tx-primary)]'
+            : 'bg-[var(--bg-input)] text-[var(--tx-muted)] hover:bg-[var(--bg-hover)] hover:text-white'
         )}
       >
         All
@@ -29,8 +29,8 @@ export function CategoryFilter({ categories, selected, onSelect }: CategoryFilte
           className={cn(
             'flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors min-h-0 min-w-0',
             selected === cat
-              ? 'bg-[#FF6B00] text-white'
-              : 'bg-[#242424] text-[#9CA3AF] hover:bg-[#2E2E2E] hover:text-white'
+              ? 'bg-[#FF6B00] text-[var(--tx-primary)]'
+              : 'bg-[var(--bg-input)] text-[var(--tx-muted)] hover:bg-[var(--bg-hover)] hover:text-white'
           )}
         >
           {cat}

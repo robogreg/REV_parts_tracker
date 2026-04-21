@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -17,6 +17,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { getAuthHeaders } from '@/lib/firebase-client';
+import toast from 'react-hot-toast';
 import { useInventory } from '@/hooks/useInventory';
 import { useTeams } from '@/hooks/useTeams';
 import { RevEvent, EventStatus, Program, Team, InventoryItem } from '@/lib/types';
@@ -148,6 +149,17 @@ export default function EventDetailPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inventory', id] }),
   });
 
+  async function handleBulkDelete(ids: string[]) {
+    const headers = await getAuthHeaders();
+    await Promise.all(
+      ids.map((itemId) =>
+        fetch(`/api/events/${id}/inventory/${itemId}`, { method: 'DELETE', headers })
+      )
+    );
+    queryClient.invalidateQueries({ queryKey: ['inventory', id] });
+    toast.success(`Removed ${ids.length} item${ids.length !== 1 ? 's' : ''}`);
+  }
+
   async function handleSaveSettings() {
     setSettingsSaving(true);
     setSettingsError(null);
@@ -182,8 +194,20 @@ export default function EventDetailPage() {
     setRevImporting(true);
     try {
       const headers = await getAuthHeaders();
-      await fetch(`/api/events/${id}/inventory/rev`, { method: 'POST', headers });
+      const res = await fetch(`/api/events/${id}/inventory/rev`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'all' }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error ?? `Import failed (${res.status})`);
+      }
+      const data = await res.json() as { added: number };
+      toast.success(`Imported ${data.added} parts from REV catalog`);
       queryClient.invalidateQueries({ queryKey: ['inventory', id] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'REV import failed');
     } finally {
       setRevImporting(false);
     }
@@ -193,8 +217,16 @@ export default function EventDetailPage() {
     setSyncingFirst(true);
     try {
       const headers = await getAuthHeaders();
-      await fetch(`/api/events/${id}/teams/sync`, { method: 'POST', headers });
+      const res = await fetch(`/api/events/${id}/teams/sync`, { method: 'POST', headers });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error ?? `Sync failed (${res.status})`);
+      }
+      const data = await res.json() as { synced: number };
+      toast.success(`Synced ${data.synced} teams from FIRST`);
       queryClient.invalidateQueries({ queryKey: ['teams', id] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'FIRST sync failed');
     } finally {
       setSyncingFirst(false);
     }
@@ -246,8 +278,8 @@ export default function EventDetailPage() {
   const totalRemaining = totalAvailable - totalGiven;
 
   const inputClass =
-    'w-full bg-[#242424] border border-[#2E2E2E] rounded-xl px-3 py-2.5 text-sm text-white placeholder-[#9CA3AF] outline-none focus:border-[#FF6B00] transition-colors';
-  const labelClass = 'block text-xs font-medium text-[#9CA3AF] mb-1.5';
+    'w-full bg-[var(--bg-input)] border border-[var(--bg-hover)] rounded-xl px-3 py-2.5 text-sm text-[var(--tx-primary)] placeholder-[var(--tx-muted)] outline-none focus:border-[#FF6B00] transition-colors';
+  const labelClass = 'block text-xs font-medium text-[var(--tx-muted)] mb-1.5';
 
   if (eventLoading) {
     return (
@@ -259,7 +291,7 @@ export default function EventDetailPage() {
 
   if (!event) {
     return (
-      <div className="p-6 text-center text-[#9CA3AF]">
+      <div className="p-6 text-center text-[var(--tx-muted)]">
         Event not found.{' '}
         <Link href="/admin/events" className="text-[#FF6B00] hover:underline">
           Back to events
@@ -273,7 +305,7 @@ export default function EventDetailPage() {
       {/* Back + header */}
       <Link
         href="/admin/events"
-        className="inline-flex items-center gap-2 text-sm text-[#9CA3AF] hover:text-white transition-colors"
+        className="inline-flex items-center gap-2 text-sm text-[var(--tx-muted)] hover:text-white transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Events
@@ -281,8 +313,8 @@ export default function EventDetailPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-start gap-2 justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-white">{event.name}</h1>
-          <p className="text-sm text-[#9CA3AF] mt-0.5">
+          <h1 className="text-2xl font-display font-bold text-[var(--tx-primary)]">{event.name}</h1>
+          <p className="text-sm text-[var(--tx-muted)] mt-0.5">
             {formatDate(event.startDate)} — {formatDate(event.endDate)} · {event.location}
           </p>
         </div>
@@ -297,7 +329,7 @@ export default function EventDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-0.5 bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl p-1 w-fit">
+      <div className="flex gap-0.5 bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-xl p-1 w-fit">
         {(
           [
             { id: 'inventory', label: 'Inventory', icon: Package },
@@ -310,7 +342,7 @@ export default function EventDetailPage() {
             onClick={() => setTab(t.id)}
             className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-              tab === t.id ? 'bg-[#FF6B00] text-white' : 'text-[#9CA3AF] hover:text-white'
+              tab === t.id ? 'bg-[#FF6B00] text-[var(--tx-primary)]' : 'text-[var(--tx-muted)] hover:text-white'
             )}
           >
             <t.icon className="w-4 h-4" />
@@ -330,9 +362,9 @@ export default function EventDetailPage() {
               { label: 'Total Given', value: totalGiven },
               { label: 'Remaining', value: totalRemaining },
             ].map((s) => (
-              <div key={s.label} className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-4 py-3">
-                <p className="text-xl font-display font-bold text-white">{s.value}</p>
-                <p className="text-xs text-[#9CA3AF] mt-0.5">{s.label}</p>
+              <div key={s.label} className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-xl px-4 py-3">
+                <p className="text-xl font-display font-bold text-[var(--tx-primary)]">{s.value}</p>
+                <p className="text-xs text-[var(--tx-muted)] mt-0.5">{s.label}</p>
               </div>
             ))}
           </div>
@@ -342,19 +374,20 @@ export default function EventDetailPage() {
             <CsvUploader
               endpoint={`/api/events/${id}/inventory/csv`}
               label="Upload CSV"
+              templateType="inventory"
               onSuccess={() => queryClient.invalidateQueries({ queryKey: ['inventory', id] })}
             />
             <button
               onClick={handleRevImport}
               disabled={revImporting}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#2E2E2E] hover:bg-[#3E3E3E] text-white text-sm transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--bg-hover)] hover:bg-[var(--bg-hover2)] text-[var(--tx-primary)] text-sm transition-colors"
             >
               {revImporting ? <Spinner size="sm" /> : <RefreshCw className="w-4 h-4" />}
               Import from REV
             </button>
             <button
               onClick={() => setAddPartOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#2E2E2E] hover:bg-[#3E3E3E] text-white text-sm transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--bg-hover)] hover:bg-[var(--bg-hover2)] text-[var(--tx-primary)] text-sm transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add Part
@@ -363,7 +396,7 @@ export default function EventDetailPage() {
               onClick={() =>
                 downloadFile(buildCsv(inventory), `${event.name}-inventory.csv`)
               }
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#2E2E2E] hover:bg-[#3E3E3E] text-white text-sm transition-colors ml-auto"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--bg-hover)] hover:bg-[var(--bg-hover2)] text-[var(--tx-primary)] text-sm transition-colors ml-auto"
             >
               <Download className="w-4 h-4" />
               Export CSV
@@ -371,7 +404,7 @@ export default function EventDetailPage() {
           </div>
 
           {/* Inventory table */}
-          <div className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-2xl p-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-2xl p-4">
             {invLoading ? (
               <div className="flex justify-center py-12">
                 <Spinner size="lg" />
@@ -389,6 +422,7 @@ export default function EventDetailPage() {
                   invMutation.mutate({ itemId, data: { lowStockThreshold: value } })
                 }
                 onDelete={(itemId) => removeItemMutation.mutate(itemId)}
+                onBulkDelete={handleBulkDelete}
               />
             )}
           </div>
@@ -403,13 +437,14 @@ export default function EventDetailPage() {
             <CsvUploader
               endpoint={`/api/events/${id}/teams/csv`}
               label="Upload CSV"
+              templateType="teams"
               onSuccess={() => queryClient.invalidateQueries({ queryKey: ['teams', id] })}
             />
             {event.firstEventCode && (
               <button
                 onClick={handleSyncFirst}
                 disabled={syncingFirst}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#2E2E2E] hover:bg-[#3E3E3E] text-white text-sm transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--bg-hover)] hover:bg-[var(--bg-hover2)] text-[var(--tx-primary)] text-sm transition-colors"
               >
                 {syncingFirst ? <Spinner size="sm" /> : <RefreshCw className="w-4 h-4" />}
                 Sync from FIRST
@@ -417,7 +452,7 @@ export default function EventDetailPage() {
             )}
             <button
               onClick={() => setAddTeamOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#2E2E2E] hover:bg-[#3E3E3E] text-white text-sm transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--bg-hover)] hover:bg-[var(--bg-hover2)] text-[var(--tx-primary)] text-sm transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add Team
@@ -425,18 +460,18 @@ export default function EventDetailPage() {
           </div>
 
           {/* Teams table */}
-          <div className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-2xl overflow-hidden">
+          <div className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-2xl overflow-hidden">
             {teamsLoading ? (
               <div className="flex justify-center py-12">
                 <Spinner size="lg" />
               </div>
             ) : teams.length === 0 ? (
-              <p className="text-center py-12 text-[#9CA3AF]">No teams added yet.</p>
+              <p className="text-center py-12 text-[var(--tx-muted)]">No teams added yet.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-[#2E2E2E] text-xs text-[#9CA3AF]">
+                    <tr className="border-b border-[var(--bg-hover)] text-xs text-[var(--tx-muted)]">
                       <th className="text-left px-4 py-3 font-medium">Team #</th>
                       <th className="text-left px-4 py-3 font-medium">Name</th>
                       <th className="text-left px-4 py-3 font-medium">Program</th>
@@ -449,22 +484,22 @@ export default function EventDetailPage() {
                     {teams.map((team) => (
                       <tr
                         key={team.id}
-                        className="border-b border-[#2E2E2E] last:border-0 hover:bg-[#242424] transition-colors"
+                        className="border-b border-[var(--bg-hover)] last:border-0 hover:bg-[var(--bg-input)] transition-colors"
                       >
-                        <td className="px-4 py-3 font-mono font-semibold text-white">
+                        <td className="px-4 py-3 font-mono font-semibold text-[var(--tx-primary)]">
                           {team.teamNumber}
                         </td>
-                        <td className="px-4 py-3 text-white">{team.teamName}</td>
+                        <td className="px-4 py-3 text-[var(--tx-primary)]">{team.teamName}</td>
                         <td className="px-4 py-3">
                           <Badge variant="orange">{team.program}</Badge>
                         </td>
-                        <td className="px-4 py-3 text-[#9CA3AF]">{team.city ?? '—'}</td>
-                        <td className="px-4 py-3 text-[#9CA3AF]">{team.state ?? '—'}</td>
+                        <td className="px-4 py-3 text-[var(--tx-muted)]">{team.city ?? '—'}</td>
+                        <td className="px-4 py-3 text-[var(--tx-muted)]">{team.state ?? '—'}</td>
                         <td className="px-4 py-3 text-right">
                           <button
                             onClick={() => removeTeamMutation.mutate(team.id)}
                             disabled={removeTeamMutation.isPending}
-                            className="p-2 rounded-lg text-[#9CA3AF] hover:text-red-400 hover:bg-red-900/10 transition-colors"
+                            className="p-2 rounded-lg text-[var(--tx-muted)] hover:text-red-400 hover:bg-red-900/10 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -483,8 +518,8 @@ export default function EventDetailPage() {
       {tab === 'settings' && (
         <div className="space-y-6 max-w-xl">
           {/* Edit form */}
-          <div className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-2xl p-5 space-y-5">
-            <h2 className="text-base font-semibold text-white">Event Settings</h2>
+          <div className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-2xl p-5 space-y-5">
+            <h2 className="text-base font-semibold text-[var(--tx-primary)]">Event Settings</h2>
 
             <div>
               <label className={labelClass}>Event Name</label>
@@ -539,12 +574,40 @@ export default function EventDetailPage() {
                       'flex-1 py-2 rounded-xl text-sm font-medium capitalize transition-colors border',
                       (settingsForm.status ?? event.status) === s
                         ? 'bg-[#FF6B00]/20 border-[#FF6B00] text-[#FF6B00]'
-                        : 'border-[#2E2E2E] text-[#9CA3AF] hover:text-white hover:bg-[#2E2E2E]'
+                        : 'border-[var(--bg-hover)] text-[var(--tx-muted)] hover:text-white hover:bg-[var(--bg-hover)]'
                     )}
                   >
                     {s}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={labelClass}>FIRST Event Code</label>
+                <input
+                  type="text"
+                  defaultValue={event.firstEventCode ?? ''}
+                  onChange={(e) =>
+                    setSettingsForm((f) => ({ ...f, firstEventCode: e.target.value.toUpperCase() || undefined }))
+                  }
+                  placeholder="e.g. CASAC"
+                  className={cn(inputClass, 'font-mono')}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>FIRST Season</label>
+                <input
+                  type="number"
+                  defaultValue={event.firstSeason ?? new Date().getFullYear()}
+                  onChange={(e) =>
+                    setSettingsForm((f) => ({ ...f, firstSeason: parseInt(e.target.value) || undefined }))
+                  }
+                  min={2020}
+                  max={2030}
+                  className={inputClass}
+                />
               </div>
             </div>
 
@@ -568,9 +631,9 @@ export default function EventDetailPage() {
               <button
                 onClick={handleSaveSettings}
                 disabled={settingsSaving}
-                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#e56000] text-white text-sm font-semibold transition-colors disabled:opacity-60"
+                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#e56000] text-[var(--tx-primary)] text-sm font-semibold transition-colors disabled:opacity-60"
               >
-                {settingsSaving && <Spinner size="sm" className="text-white" />}
+                {settingsSaving && <Spinner size="sm" className="text-[var(--tx-primary)]" />}
                 Save Changes
               </button>
             </div>
@@ -582,7 +645,7 @@ export default function EventDetailPage() {
               <AlertTriangle className="w-5 h-5 text-red-400" />
               <h2 className="text-base font-semibold text-red-400">Danger Zone</h2>
             </div>
-            <p className="text-sm text-[#9CA3AF]">
+            <p className="text-sm text-[var(--tx-muted)]">
               Deleting this event is permanent and will remove all inventory, teams, and transaction
               history.
             </p>
@@ -626,19 +689,19 @@ export default function EventDetailPage() {
             </p>
           )}
         </div>
-        <div className="px-6 py-4 border-t border-[#2E2E2E] flex gap-3 justify-end">
+        <div className="px-6 py-4 border-t border-[var(--bg-hover)] flex gap-3 justify-end">
           <button
             onClick={() => setAddPartOpen(false)}
-            className="px-4 py-2 rounded-xl text-sm text-[#9CA3AF] hover:text-white"
+            className="px-4 py-2 rounded-xl text-sm text-[var(--tx-muted)] hover:text-white"
           >
             Cancel
           </button>
           <button
             onClick={handleAddPart}
             disabled={addPartLoading || !newPartSku}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#e56000] text-white text-sm font-medium disabled:opacity-60"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#e56000] text-[var(--tx-primary)] text-sm font-medium disabled:opacity-60"
           >
-            {addPartLoading && <Spinner size="sm" className="text-white" />}
+            {addPartLoading && <Spinner size="sm" className="text-[var(--tx-primary)]" />}
             Add Part
           </button>
         </div>
@@ -704,17 +767,17 @@ export default function EventDetailPage() {
             </div>
           </div>
         </div>
-        <div className="px-6 py-4 border-t border-[#2E2E2E] flex gap-3 justify-end">
+        <div className="px-6 py-4 border-t border-[var(--bg-hover)] flex gap-3 justify-end">
           <button
             onClick={() => setAddTeamOpen(false)}
-            className="px-4 py-2 rounded-xl text-sm text-[#9CA3AF] hover:text-white"
+            className="px-4 py-2 rounded-xl text-sm text-[var(--tx-muted)] hover:text-white"
           >
             Cancel
           </button>
           <button
             onClick={handleAddTeam}
             disabled={!newTeam.teamNumber || !newTeam.teamName}
-            className="px-4 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#e56000] text-white text-sm font-medium disabled:opacity-60"
+            className="px-4 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#e56000] text-[var(--tx-primary)] text-sm font-medium disabled:opacity-60"
           >
             Add Team
           </button>
@@ -729,7 +792,7 @@ export default function EventDetailPage() {
         size="sm"
       >
         <div className="px-6 py-4 space-y-3">
-          <p className="text-sm text-[#9CA3AF]">
+          <p className="text-sm text-[var(--tx-muted)]">
             Type the event name to confirm deletion:
           </p>
           <input
@@ -739,10 +802,10 @@ export default function EventDetailPage() {
             className={inputClass}
           />
         </div>
-        <div className="px-6 py-4 border-t border-[#2E2E2E] flex gap-3 justify-end">
+        <div className="px-6 py-4 border-t border-[var(--bg-hover)] flex gap-3 justify-end">
           <button
             onClick={() => setDeleteConfirm(false)}
-            className="px-4 py-2 rounded-xl text-sm text-[#9CA3AF] hover:text-white"
+            className="px-4 py-2 rounded-xl text-sm text-[var(--tx-muted)] hover:text-white"
           >
             Cancel
           </button>
@@ -751,7 +814,7 @@ export default function EventDetailPage() {
               const input = document.getElementById('delete-confirm-input') as HTMLInputElement;
               if (input?.value === event.name) handleDeleteEvent();
             }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-700 hover:bg-red-600 text-white text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-700 hover:bg-red-600 text-[var(--tx-primary)] text-sm font-medium"
           >
             <Trash2 className="w-4 h-4" />
             Delete Forever

@@ -1,5 +1,6 @@
-'use client';
+﻿'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import { Lock, AlertTriangle, Package, Wrench, Cpu, Zap } from 'lucide-react';
 import { InventoryItem } from '@/lib/types';
@@ -52,6 +53,11 @@ function StockBadge({ remaining, threshold }: { remaining: number; threshold?: n
 export function PartCard({ item }: PartCardProps) {
   const { part, quantityAvailable, quantityGiven, isLoaner, lowStockThreshold } = item;
   const remaining = quantityAvailable - quantityGiven;
+  const packSize = part.packSize ?? 1;
+  const hasPack = packSize > 1;
+
+  // For -pk items, track whether the user wants to give a full pack or individuals
+  const [giveAsPack, setGiveAsPack] = useState(hasPack);
 
   const cartItems = useCartStore((s) => s.items);
   const addItem = useCartStore((s) => s.addItem);
@@ -68,11 +74,12 @@ export function PartCard({ item }: PartCardProps) {
         duration: 5000,
       });
     }
+    // When giving as a full pack, quantity represents 1 pack = packSize individual units
     addItem({
       part,
       inventoryItem: item,
-      quantity: 1,
-      unitType: 'each',
+      quantity: hasPack && giveAsPack ? packSize : 1,
+      unitType: hasPack && giveAsPack ? 'pack' : 'each',
       isLoaner,
     });
   }
@@ -80,13 +87,13 @@ export function PartCard({ item }: PartCardProps) {
   return (
     <div
       className={cn(
-        'bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl overflow-hidden flex flex-col',
+        'bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-xl overflow-hidden flex flex-col',
         'hover:border-[#FF6B00]/40 transition-colors',
         remaining <= 0 && 'opacity-60'
       )}
     >
       {/* Image */}
-      <div className="relative aspect-square bg-[#0F0F0F] flex items-center justify-center">
+      <div className="relative aspect-square bg-[var(--bg-base)] flex items-center justify-center">
         {part.imageUrl ? (
           <Image
             src={part.imageUrl}
@@ -115,18 +122,41 @@ export function PartCard({ item }: PartCardProps) {
       {/* Info */}
       <div className="p-3 flex flex-col gap-2 flex-1">
         <div>
-          <p className="text-sm font-semibold text-white leading-tight line-clamp-2">{part.name}</p>
-          <p className="text-xs font-mono text-[#9CA3AF] mt-0.5">{part.sku}</p>
+          <p className="text-sm font-semibold text-[var(--tx-primary)] leading-tight line-clamp-2">{part.name}</p>
+          <p className="text-xs font-mono text-[var(--tx-muted)] mt-0.5">{part.sku}</p>
         </div>
 
         <div className="flex items-center justify-between">
           <StockBadge remaining={remaining} threshold={lowStockThreshold} />
-          {part.packSize > 1 && (
-            <span className="text-[10px] text-[#9CA3AF]">
-              {part.packUnit ?? `Pack of ${part.packSize}`}
-            </span>
-          )}
         </div>
+
+        {/* Pack / individual toggle for -pk items */}
+        {hasPack && !inCart && (
+          <div className="flex rounded-lg overflow-hidden border border-[var(--bg-hover)] text-[10px] font-medium">
+            <button
+              onClick={() => setGiveAsPack(true)}
+              className={cn(
+                'flex-1 py-1 transition-colors',
+                giveAsPack
+                  ? 'bg-[#FF6B00] text-[var(--tx-primary)]'
+                  : 'text-[var(--tx-muted)] hover:text-[var(--tx-primary)]'
+              )}
+            >
+              Pack of {packSize}
+            </button>
+            <button
+              onClick={() => setGiveAsPack(false)}
+              className={cn(
+                'flex-1 py-1 transition-colors',
+                !giveAsPack
+                  ? 'bg-[#FF6B00] text-[var(--tx-primary)]'
+                  : 'text-[var(--tx-muted)] hover:text-[var(--tx-primary)]'
+              )}
+            >
+              Individual
+            </button>
+          </div>
+        )}
 
         {/* Cart controls */}
         {inCart ? (
@@ -139,7 +169,7 @@ export function PartCard({ item }: PartCardProps) {
         ) : (
           <button
             onClick={handleAdd}
-            className="w-full py-2 rounded-lg bg-[#FF6B00] hover:bg-[#e55a00] text-white text-sm font-semibold transition-colors min-h-0"
+            className="w-full py-2 rounded-lg bg-[#FF6B00] hover:bg-[#e55a00] text-[var(--tx-primary)] text-sm font-semibold transition-colors min-h-0"
           >
             {remaining <= 0 ? 'Add (Override)' : 'Add'}
           </button>

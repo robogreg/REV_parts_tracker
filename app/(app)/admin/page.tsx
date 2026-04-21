@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -100,8 +100,8 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-white">Dashboard</h1>
-          <p className="text-sm text-[#9CA3AF] mt-0.5">Event performance overview</p>
+          <h1 className="text-2xl font-display font-bold text-[var(--tx-primary)]">Dashboard</h1>
+          <p className="text-sm text-[var(--tx-muted)] mt-0.5">Event performance overview</p>
         </div>
 
         {/* Event selector */}
@@ -112,7 +112,7 @@ export default function AdminDashboard() {
             <select
               value={effectiveEventId}
               onChange={(e) => setSelectedEventId(e.target.value)}
-              className="bg-[#1A1A1A] border border-[#2E2E2E] text-white text-sm rounded-xl px-3 py-2 outline-none focus:border-[#FF6B00] transition-colors"
+              className="bg-[var(--bg-card)] border border-[var(--bg-hover)] text-[var(--tx-primary)] text-sm rounded-xl px-3 py-2 outline-none focus:border-[#FF6B00] transition-colors"
             >
               {events.map((ev) => (
                 <option key={ev.id} value={ev.id}>
@@ -125,7 +125,7 @@ export default function AdminDashboard() {
       </div>
 
       {!effectiveEventId ? (
-        <div className="text-center py-20 text-[#9CA3AF]">No events found. Create one first.</div>
+        <div className="text-center py-20 text-[var(--tx-muted)]">No events found. Create one first.</div>
       ) : (
         <>
           {/* Stats */}
@@ -134,8 +134,8 @@ export default function AdminDashboard() {
           {/* Chart + Table side-by-side on xl */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Bar chart */}
-            <div className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-2xl p-5">
-              <h2 className="text-base font-semibold text-white mb-4">
+            <div className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-2xl p-5">
+              <h2 className="text-base font-semibold text-[var(--tx-primary)] mb-4">
                 Top 10 Parts by Units Given
               </h2>
               {txLoading ? (
@@ -143,28 +143,28 @@ export default function AdminDashboard() {
                   <Spinner />
                 </div>
               ) : chartData.length === 0 ? (
-                <p className="text-[#9CA3AF] text-sm text-center py-12">No data yet.</p>
+                <p className="text-[var(--tx-muted)] text-sm text-center py-12">No data yet.</p>
               ) : (
                 <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={chartData} layout="vertical" margin={{ left: 0, right: 16 }}>
-                    <XAxis type="number" tick={{ fill: '#9CA3AF', fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <XAxis type="number" tick={{ fill: 'var(--tx-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
                     <YAxis
                       type="category"
                       dataKey="name"
                       width={120}
-                      tick={{ fill: '#9CA3AF', fontSize: 11 }}
+                      tick={{ fill: 'var(--tx-muted)', fontSize: 11 }}
                       axisLine={false}
                       tickLine={false}
                     />
                     <Tooltip
                       contentStyle={{
-                        background: '#1A1A1A',
-                        border: '1px solid #2E2E2E',
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--bg-hover)',
                         borderRadius: 8,
-                        color: '#F5F5F5',
+                        color: 'var(--tx-primary)',
                         fontSize: 12,
                       }}
-                      cursor={{ fill: '#2E2E2E' }}
+                      cursor={{ fill: 'var(--bg-hover)' }}
                     />
                     <Bar dataKey="units" radius={[0, 4, 4, 0]}>
                       {chartData.map((_, i) => (
@@ -180,10 +180,10 @@ export default function AdminDashboard() {
             </div>
 
             {/* Recent transactions */}
-            <div className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-2xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-[#2E2E2E]">
-                <h2 className="text-base font-semibold text-white">Recent Transactions</h2>
-                <p className="text-xs text-[#9CA3AF] mt-0.5">Last 20 for this event</p>
+            <div className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-2xl overflow-hidden">
+              <div className="px-5 py-4 border-b border-[var(--bg-hover)]">
+                <h2 className="text-base font-semibold text-[var(--tx-primary)]">Recent Transactions</h2>
+                <p className="text-xs text-[var(--tx-muted)] mt-0.5">Last 20 for this event</p>
               </div>
               {txLoading ? (
                 <div className="flex justify-center py-12">
@@ -193,7 +193,7 @@ export default function AdminDashboard() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-[#2E2E2E] text-xs text-[#9CA3AF]">
+                      <tr className="border-b border-[var(--bg-hover)] text-xs text-[var(--tx-muted)]">
                         <th className="text-left px-4 py-3 font-medium">Time</th>
                         <th className="text-left px-4 py-3 font-medium">Staff</th>
                         <th className="text-left px-4 py-3 font-medium">Team</th>
@@ -204,7 +204,7 @@ export default function AdminDashboard() {
                     <tbody>
                       {transactions.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="text-center py-12 text-[#9CA3AF]">
+                          <td colSpan={5} className="text-center py-12 text-[var(--tx-muted)]">
                             No transactions yet.
                           </td>
                         </tr>
@@ -214,25 +214,25 @@ export default function AdminDashboard() {
                           return (
                             <tr
                               key={tx.id}
-                              className="border-b border-[#2E2E2E] hover:bg-[#242424] transition-colors"
+                              className="border-b border-[var(--bg-hover)] hover:bg-[var(--bg-input)] transition-colors"
                             >
-                              <td className="px-4 py-2.5 text-[10px] text-[#9CA3AF] whitespace-nowrap">
+                              <td className="px-4 py-2.5 text-[10px] text-[var(--tx-muted)] whitespace-nowrap">
                                 {formatDateTime(tx.timestamp)}
                               </td>
                               <td className="px-4 py-2.5">
-                                <p className="text-white text-xs">{tx.staffName}</p>
+                                <p className="text-[var(--tx-primary)] text-xs">{tx.staffName}</p>
                               </td>
                               <td className="px-4 py-2.5">
-                                <p className="text-white text-xs font-medium">#{tx.teamNumber}</p>
+                                <p className="text-[var(--tx-primary)] text-xs font-medium">#{tx.teamNumber}</p>
                               </td>
-                              <td className="px-4 py-2.5 text-center text-white text-xs">
+                              <td className="px-4 py-2.5 text-center text-[var(--tx-primary)] text-xs">
                                 {tx.items.length}
                               </td>
                               <td className="px-4 py-2.5 text-center">
                                 {hasLoaners ? (
                                   <Badge variant="warning">Yes</Badge>
                                 ) : (
-                                  <span className="text-[#9CA3AF] text-xs">—</span>
+                                  <span className="text-[var(--tx-muted)] text-xs">—</span>
                                 )}
                               </td>
                             </tr>

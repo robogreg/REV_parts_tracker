@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { RotateCcw } from 'lucide-react';
@@ -68,32 +68,32 @@ export function LoanerReturnModal({
     <Modal open={open} onClose={onClose} title="Mark Loaner Returned" size="sm">
       <div className="px-6 py-4 space-y-4">
         {/* Transaction context */}
-        <div className="bg-[#242424] rounded-xl px-4 py-3 space-y-1">
-          <p className="text-xs text-[#9CA3AF]">Team</p>
-          <p className="text-white font-semibold">
+        <div className="bg-[var(--bg-input)] rounded-xl px-4 py-3 space-y-1">
+          <p className="text-xs text-[var(--tx-muted)]">Team</p>
+          <p className="text-[var(--tx-primary)] font-semibold">
             Team {transaction.teamNumber} — {transaction.teamName}
           </p>
-          <p className="text-xs text-[#9CA3AF] mt-1">
+          <p className="text-xs text-[var(--tx-muted)] mt-1">
             Contact: {transaction.contactName}
           </p>
         </div>
 
         {/* Items being marked returned */}
         <div className="space-y-2">
-          <p className="text-xs font-medium text-[#9CA3AF] uppercase tracking-wide">
+          <p className="text-xs font-medium text-[var(--tx-muted)] uppercase tracking-wide">
             {targetItems.length === 1 ? 'Item to mark returned' : `${targetItems.length} items to mark returned`}
           </p>
           {targetItems.map((item, i) => (
             <div
               key={i}
-              className="flex items-center justify-between bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-4 py-3"
+              className="flex items-center justify-between bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-xl px-4 py-3"
             >
               <div>
-                <p className="text-sm font-medium text-white">{item.partName}</p>
-                <p className="text-xs text-[#9CA3AF] font-mono">{item.sku}</p>
+                <p className="text-sm font-medium text-[var(--tx-primary)]">{item.partName}</p>
+                <p className="text-xs text-[var(--tx-muted)] font-mono">{item.sku}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-white font-semibold">×{item.quantity}</p>
+                <p className="text-sm text-[var(--tx-primary)] font-semibold">×{item.quantity}</p>
                 <p className="text-[10px] text-amber-400">Loaner</p>
               </div>
             </div>
@@ -108,21 +108,21 @@ export function LoanerReturnModal({
       </div>
 
       {/* Footer */}
-      <div className="px-6 py-4 border-t border-[#2E2E2E] flex gap-3 justify-end">
+      <div className="px-6 py-4 border-t border-[var(--bg-hover)] flex gap-3 justify-end">
         <button
           onClick={onClose}
           disabled={loading}
-          className="px-4 py-2 rounded-xl text-sm text-[#9CA3AF] hover:text-white transition-colors"
+          className="px-4 py-2 rounded-xl text-sm text-[var(--tx-muted)] hover:text-white transition-colors"
         >
           Cancel
         </button>
         <button
           onClick={handleConfirm}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-700 hover:bg-green-600 text-white text-sm font-medium transition-colors disabled:opacity-60"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-700 hover:bg-green-600 text-[var(--tx-primary)] text-sm font-medium transition-colors disabled:opacity-60"
         >
           {loading ? (
-            <Spinner size="sm" className="text-white" />
+            <Spinner size="sm" className="text-[var(--tx-primary)]" />
           ) : (
             <RotateCcw className="w-4 h-4" />
           )}

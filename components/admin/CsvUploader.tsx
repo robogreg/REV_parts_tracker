@@ -1,16 +1,27 @@
-'use client';
+﻿'use client';
 
 import { useState, useRef } from 'react';
-import { Upload, AlertCircle, CheckCircle, X } from 'lucide-react';
+import { Upload, AlertCircle, CheckCircle, X, FileDown } from 'lucide-react';
 import { getAuthHeaders } from '@/lib/firebase-client';
 import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/lib/utils';
+
+const INVENTORY_TEMPLATE = `sku,name,category,quantity_available,pack_size,is_loaner,low_stock_threshold,msrp,description
+REV-11-1271,Through Bore Encoder,Electronics,5,1,no,2,39.99,
+REV-41-1600,NEO Brushless Motor,Motors,3,1,no,1,49.99,
+`;
+
+const TEAMS_TEMPLATE = `team_number,team_name,program,city,state,country
+254,The Cheesy Poofs,FRC,San Jose,CA,USA
+118,Robonauts,FRC,Houston,TX,USA
+`;
 
 interface CsvUploaderProps {
   endpoint: string;
   onSuccess?: (result: unknown) => void;
   label?: string;
   accept?: string;
+  templateType?: 'inventory' | 'teams';
 }
 
 interface ParsedRow {
@@ -27,6 +38,7 @@ export function CsvUploader({
   onSuccess,
   label = 'Upload CSV',
   accept = '.csv',
+  templateType,
 }: CsvUploaderProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<ParsedRow[] | null>(null);
@@ -36,6 +48,7 @@ export function CsvUploader({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<RowError[]>([]);
   const [success, setSuccess] = useState(false);
+  const [successCount, setSuccessCount] = useState(0);
 
   function parseCsv(text: string): { headers: string[]; rows: ParsedRow[] } {
     const lines = text.split(/\r?\n/).filter((l) => l.trim());
@@ -93,11 +106,20 @@ export function CsvUploader({
         return;
       }
 
-      setSuccess(true);
-      setPreview(null);
-      setRawFile(null);
-      if (fileRef.current) fileRef.current.value = '';
-      onSuccess?.(data);
+      // Surface any per-row errors even on a 200 response
+      if (data.errors?.length) {
+        setErrors(data.errors);
+      }
+
+      const imported = (data.created ?? 0) + (data.updated ?? 0);
+      if (imported > 0 || !data.errors?.length) {
+        setSuccessCount(imported);
+        setSuccess(true);
+        setPreview(null);
+        setRawFile(null);
+        if (fileRef.current) fileRef.current.value = '';
+        onSuccess?.(data);
+      }
     } catch (err) {
       setErrors([{ row: 0, message: err instanceof Error ? err.message : 'Upload failed' }]);
     } finally {
@@ -110,11 +132,24 @@ export function CsvUploader({
     setRawFile(null);
     setErrors([]);
     setSuccess(false);
+    setSuccessCount(0);
     if (fileRef.current) fileRef.current.value = '';
   }
 
+  function downloadTemplate() {
+    const csv = templateType === 'teams' ? TEAMS_TEMPLATE : INVENTORY_TEMPLATE;
+    const filename = templateType === 'teams' ? 'teams-template.csv' : 'inventory-template.csv';
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
-    <div>
+    <div className="flex items-center gap-1.5">
       {/* Trigger */}
       {!preview && !success && (
         <>
@@ -127,11 +162,21 @@ export function CsvUploader({
           />
           <button
             onClick={() => fileRef.current?.click()}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#2E2E2E] hover:bg-[#3E3E3E] text-white text-sm transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--bg-hover)] hover:bg-[var(--bg-hover2)] text-[var(--tx-primary)] text-sm transition-colors"
           >
             <Upload className="w-4 h-4" />
             {label}
           </button>
+          {templateType && (
+            <button
+              onClick={downloadTemplate}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--bd)] text-[var(--tx-muted)] hover:text-[var(--tx-primary)] text-sm transition-colors"
+              title="Download CSV template"
+            >
+              <FileDown className="w-4 h-4" />
+              Template
+            </button>
+          )}
         </>
       )}
 
@@ -139,8 +184,8 @@ export function CsvUploader({
       {success && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-green-900/30 border border-green-800/50 text-green-400 text-sm">
           <CheckCircle className="w-4 h-4" />
-          Import successful!
-          <button onClick={handleReset} className="ml-auto text-[#9CA3AF] hover:text-white">
+          {successCount > 0 ? `Imported ${successCount} rows` : 'Import successful!'}
+          <button onClick={handleReset} className="ml-auto text-[var(--tx-muted)] hover:text-white">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -148,15 +193,15 @@ export function CsvUploader({
 
       {/* Preview */}
       {preview && !success && (
-        <div className="mt-3 bg-[#141414] border border-[#2E2E2E] rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-[#2E2E2E] flex items-center justify-between">
+        <div className="mt-3 bg-[var(--bg-deep)] border border-[var(--bg-hover)] rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-[var(--bg-hover)] flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-white">
+              <p className="text-sm font-medium text-[var(--tx-primary)]">
                 {rawFile?.name} — {totalRows} rows
               </p>
-              <p className="text-xs text-[#9CA3AF]">Preview: first 5 rows</p>
+              <p className="text-xs text-[var(--tx-muted)]">Preview: first 5 rows</p>
             </div>
-            <button onClick={handleReset} className="text-[#9CA3AF] hover:text-white p-1">
+            <button onClick={handleReset} className="text-[var(--tx-muted)] hover:text-white p-1">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -164,7 +209,7 @@ export function CsvUploader({
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[#2E2E2E] text-[#9CA3AF]">
+                <tr className="border-b border-[var(--bg-hover)] text-[var(--tx-muted)]">
                   {headers.map((h) => (
                     <th key={h} className="text-left px-3 py-2 font-medium whitespace-nowrap">
                       {h}
@@ -174,10 +219,10 @@ export function CsvUploader({
               </thead>
               <tbody>
                 {preview.map((row, i) => (
-                  <tr key={i} className={cn('border-b border-[#2E2E2E]/50', i % 2 === 0 ? '' : 'bg-[#1A1A1A]/50')}>
+                  <tr key={i} className={cn('border-b border-[var(--bg-hover)]/50', i % 2 === 0 ? '' : 'bg-[var(--bg-card)]/50')}>
                     {headers.map((h) => (
-                      <td key={h} className="px-3 py-2 text-white truncate max-w-[120px]">
-                        {row[h] || <span className="text-[#9CA3AF]">—</span>}
+                      <td key={h} className="px-3 py-2 text-[var(--tx-primary)] truncate max-w-[120px]">
+                        {row[h] || <span className="text-[var(--tx-muted)]">—</span>}
                       </td>
                     ))}
                   </tr>
@@ -188,7 +233,7 @@ export function CsvUploader({
 
           {/* Errors */}
           {errors.length > 0 && (
-            <div className="px-4 py-3 border-t border-[#2E2E2E] space-y-1">
+            <div className="px-4 py-3 border-t border-[var(--bg-hover)] space-y-1">
               {errors.map((err, i) => (
                 <div key={i} className="flex items-start gap-2 text-xs text-red-400">
                   <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
@@ -199,20 +244,20 @@ export function CsvUploader({
             </div>
           )}
 
-          <div className="px-4 py-3 border-t border-[#2E2E2E] flex gap-2 justify-end">
+          <div className="px-4 py-3 border-t border-[var(--bg-hover)] flex gap-2 justify-end">
             <button
               onClick={handleReset}
               disabled={loading}
-              className="px-3 py-1.5 rounded-lg text-sm text-[#9CA3AF] hover:text-white transition-colors"
+              className="px-3 py-1.5 rounded-lg text-sm text-[var(--tx-muted)] hover:text-white transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleImport}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-[#FF6B00] hover:bg-[#e56000] text-white text-sm font-medium transition-colors disabled:opacity-60"
+              className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-[#FF6B00] hover:bg-[#e56000] text-[var(--tx-primary)] text-sm font-medium transition-colors disabled:opacity-60"
             >
-              {loading && <Spinner size="sm" className="text-white" />}
+              {loading && <Spinner size="sm" className="text-[var(--tx-primary)]" />}
               Import {totalRows} rows
             </button>
           </div>

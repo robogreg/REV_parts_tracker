@@ -12,16 +12,27 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+// Firebase client SDK must only be initialized in the browser.
+// During Next.js server-side rendering (build-time prerender or SSR),
+// getAuth() / getFirestore() etc. fail because they rely on browser globals.
+// The exported values are only ever *used* inside useEffect / queryFn callbacks
+// which don't run on the server, so the undefined-during-SSR stubs are safe.
+const isBrowser = typeof window !== 'undefined';
+const _app = isBrowser
+  ? (getApps().length ? getApp() : initializeApp(firebaseConfig))
+  : undefined;
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+export const auth = (_app ? getAuth(_app) : undefined) as ReturnType<typeof getAuth>;
+export const db = (_app ? getFirestore(_app) : undefined) as ReturnType<typeof getFirestore>;
+export const storage = (_app ? getStorage(_app) : undefined) as ReturnType<typeof getStorage>;
 
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ hd: 'revrobotics.com' });
+export const googleProvider = isBrowser ? new GoogleAuthProvider() : undefined as unknown as GoogleAuthProvider;
+if (isBrowser && googleProvider) {
+  googleProvider.setCustomParameters({ hd: 'revrobotics.com' });
+}
 
 export async function getAuthHeaders(): Promise<Record<string, string>> {
+  if (!auth) throw new Error('Not authenticated');
   const user = auth.currentUser;
   if (!user) throw new Error('Not authenticated');
   const token = await user.getIdToken();

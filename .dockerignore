@@ -2,4 +2,10 @@
 .next
 node_modules
 *.md
-.env*
+# Keep .env.production (NEXT_PUBLIC_* vars must be baked in at build time)
+# Exclude only local/secret env files that should never be in the image
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.development

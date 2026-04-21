@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Settings, ShoppingCart, Wifi, WifiOff } from 'lucide-react';
@@ -63,16 +63,16 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-[#0F0F0F] overflow-hidden">
+    <div className="h-screen flex flex-col bg-[var(--bg-base)] overflow-hidden">
       {/* Sync/Offline banner */}
       <SyncBanner />
 
       {/* Header */}
-      <header className="flex-shrink-0 bg-[#1A1A1A] border-b border-[#2E2E2E] px-3 py-2 flex items-center gap-2">
+      <header className="flex-shrink-0 bg-[var(--bg-card)] border-b border-[var(--bg-hover)] px-3 py-2 flex items-center gap-2">
         {/* Logo */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <div className="w-8 h-8 bg-[#FF6B00] rounded-lg flex items-center justify-center">
-            <span className="font-display text-white text-xs">RP</span>
+            <span className="font-display text-[var(--tx-primary)] text-xs">RP</span>
           </div>
         </div>
 
@@ -82,14 +82,14 @@ export default function CheckoutPage() {
           className={cn(
             'flex-1 text-left px-3 py-2 rounded-xl transition-colors min-h-0 min-w-0',
             activeEvent
-              ? 'bg-[#242424] hover:bg-[#2E2E2E]'
+              ? 'bg-[var(--bg-input)] hover:bg-[var(--bg-hover)]'
               : 'bg-[#FF6B00]/10 border border-[#FF6B00]/50 animate-pulse'
           )}
         >
           {activeEvent ? (
             <div>
-              <p className="text-xs text-[#9CA3AF]">{activeEvent.program} Event</p>
-              <p className="text-sm font-semibold text-white truncate">{activeEvent.name}</p>
+              <p className="text-xs text-[var(--tx-muted)]">{activeEvent.program} Event</p>
+              <p className="text-sm font-semibold text-[var(--tx-primary)] truncate">{activeEvent.name}</p>
             </div>
           ) : (
             <p className="text-sm text-[#FF6B00] font-semibold">Select Event</p>
@@ -119,7 +119,7 @@ export default function CheckoutPage() {
           {user?.isAdmin && (
             <Link
               href="/admin"
-              className="p-2 text-[#9CA3AF] hover:text-white transition-colors min-h-0 min-w-0"
+              className="p-2 text-[var(--tx-muted)] hover:text-white transition-colors min-h-0 min-w-0"
             >
               <Settings className="w-5 h-5" />
             </Link>
@@ -143,11 +143,11 @@ export default function CheckoutPage() {
           {/* Cart button (mobile) */}
           <button
             onClick={() => setCartOpen(true)}
-            className="lg:hidden relative p-2 text-[#9CA3AF] hover:text-white transition-colors min-h-0 min-w-0"
+            className="lg:hidden relative p-2 text-[var(--tx-muted)] hover:text-white transition-colors min-h-0 min-w-0"
           >
             <ShoppingCart className="w-5 h-5" />
             {cartCount > 0 && (
-              <span className="absolute top-0 right-0 bg-[#FF6B00] text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+              <span className="absolute top-0 right-0 bg-[#FF6B00] text-[var(--tx-primary)] text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                 {cartCount > 9 ? '9+' : cartCount}
               </span>
             )}
@@ -156,16 +156,16 @@ export default function CheckoutPage() {
       </header>
 
       {/* Search + Category filter */}
-      <div className="flex-shrink-0 bg-[#1A1A1A] border-b border-[#2E2E2E] py-2 space-y-2">
+      <div className="flex-shrink-0 bg-[var(--bg-card)] border-b border-[var(--bg-hover)] py-2 space-y-2">
         <div className="relative px-4">
-          <Search className="absolute left-7 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF] pointer-events-none" />
+          <Search className="absolute left-7 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--tx-muted)] pointer-events-none" />
           <input
             ref={searchRef}
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder='Search parts… (press "/" to focus)'
-            className="w-full bg-[#242424] border border-[#2E2E2E] rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-[#9CA3AF] outline-none focus:border-[#FF6B00] transition-colors"
+            className="w-full bg-[var(--bg-input)] border border-[var(--bg-hover)] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[var(--tx-primary)] placeholder-[var(--tx-muted)] outline-none focus:border-[#FF6B00] transition-colors"
           />
         </div>
         {categories.length > 0 && (
@@ -186,12 +186,12 @@ export default function CheckoutPage() {
             <div className="m-4 bg-green-900/20 border border-green-800/40 rounded-xl p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-green-400">Parts given to Team {lastTx.teamNumber}!</p>
-                <p className="text-xs text-[#9CA3AF]">{lastTx.items.length} item type{lastTx.items.length !== 1 ? 's' : ''} · {lastTx.totalItems} units</p>
+                <p className="text-xs text-[var(--tx-muted)]">{lastTx.items.length} item type{lastTx.items.length !== 1 ? 's' : ''} · {lastTx.totalItems} units</p>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setLastTx(null)}
-                  className="text-xs text-[#9CA3AF] hover:text-white min-h-0 min-w-0 px-2"
+                  className="text-xs text-[var(--tx-muted)] hover:text-white min-h-0 min-w-0 px-2"
                 >
                   Dismiss
                 </button>

@@ -4,28 +4,75 @@
 import type { FirstEvent, FirstTeam } from './types';
 
 const BASE_URLS = {
-  FRC: 'https://frc-events.firstinspires.org/v2.0',
+  FRC: 'https://frc-api.firstinspires.org/v2.0',
   FTC: 'https://ftc-events.firstinspires.org/v2.0',
 } as const;
 
-// FIRST_API_KEY should be the already-base64-encoded "username:authToken" string
-function getAuthHeader(): string {
-  const key = process.env.FIRST_API_KEY;
-  if (!key) throw new Error('FIRST_API_KEY environment variable is not set');
-  return `Basic ${key}`;
+// Use Buffer (Node.js) rather than btoa (browser) for reliable server-side encoding.
+function b64(s: string): string {
+  return Buffer.from(s).toString('base64');
+}
+
+// Built-in credentials. Override by setting FIRST_API_KEY / FIRST_FTC_API_KEY env vars.
+// Firestore settings are intentionally NOT checked — bad stored values previously caused 401s.
+const BUILTIN_KEYS = {
+  FRC: b64('revrobotics:8991c9cf-74bd-4be6-a055-888ddab9b8f8'),
+  FTC: b64('revrobotics:F1BF26C0-AC76-4864-85EE-200FDC0F2F5C'),
+};
+
+function getAuthHeader(program: 'FRC' | 'FTC'): string {
+  if (program === 'FTC') {
+    const envKey = process.env.FIRST_FTC_API_KEY;
+    return `Basic ${envKey ?? BUILTIN_KEYS.FTC}`;
+  }
+  const envKey = process.env.FIRST_API_KEY;
+  return `Basic ${envKey ?? BUILTIN_KEYS.FRC}`;
+}
+
+// ─── Server-side event cache (Firestore, 24 h TTL) ───────────────────────────
+
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+async function getCachedEvents(program: 'FRC' | 'FTC', season: number): Promise<FirstEvent[] | null> {
+  try {
+    const { adminDb } = await import('./firebase-admin');
+    const key = `${program}_${season}`;
+    const snap = await adminDb().collection('firstEventsCache').doc(key).get();
+    if (!snap.exists) return null;
+    const { events, cachedAt } = snap.data() as { events: FirstEvent[]; cachedAt: string };
+    if (Date.now() - new Date(cachedAt).getTime() > CACHE_TTL_MS) return null;
+    return events;
+  } catch {
+    return null; // cache miss is non-fatal
+  }
+}
+
+async function setCachedEvents(program: 'FRC' | 'FTC', season: number, events: FirstEvent[]): Promise<void> {
+  try {
+    const { adminDb } = await import('./firebase-admin');
+    const key = `${program}_${season}`;
+    await adminDb().collection('firstEventsCache').doc(key).set({
+      events,
+      cachedAt: new Date().toISOString(),
+    });
+  } catch {
+    // non-fatal — live data already returned
+  }
 }
 
 async function firstFetch<T>(program: 'FRC' | 'FTC', path: string): Promise<T> {
   const url = `${BASE_URLS[program]}${path}`;
   const res = await fetch(url, {
     headers: {
-      Authorization: getAuthHeader(),
+      Authorization: getAuthHeader(program),
       Accept: 'application/json',
     },
   });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new Error(`FIRST API error ${res.status} for ${url}: ${body}`);
+    // Strip HTML tags to surface a clean message
+    const clean = body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300);
+    throw new Error(`FIRST ${program} API error ${res.status}: ${clean || '(no body)'}`);
   }
   return res.json() as Promise<T>;
 }
@@ -112,6 +159,10 @@ export async function getFirstEvents(
   program: 'FRC' | 'FTC',
   season: number
 ): Promise<FirstEvent[]> {
+  // Check Firestore cache first (24 h TTL — events don't change intra-day)
+  const cached = await getCachedEvents(program, season);
+  if (cached) return cached;
+
   const allEvents: FirstEvent[] = [];
 
   if (program === 'FRC') {
@@ -167,6 +218,9 @@ export async function getFirstEvents(
       page++;
     } while (page <= pageTotal);
   }
+
+  // Store in cache for next request
+  void setCachedEvents(program, season, allEvents);
 
   return allEvents;
 }

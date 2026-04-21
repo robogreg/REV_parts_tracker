@@ -1,4 +1,7 @@
-'use client';
+﻿'use client';
+
+// Auth-protected routes are never statically rendered at build time.
+export const dynamic = 'force-dynamic';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -18,7 +21,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0F0F0F]">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)]">
         <Spinner size="lg" />
       </div>
     );

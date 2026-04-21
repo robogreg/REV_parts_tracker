@@ -26,7 +26,15 @@ export async function POST(request: NextRequest, context: RouteContext): Promise
     }
 
     const { id: eventId } = await context.params;
-    const body = (await request.json()) as RevImportBody;
+
+    // Parse body; default to mode:'all' if body is missing or unparseable
+    let body: RevImportBody = { mode: 'all' };
+    try {
+      const text = await request.text();
+      if (text.trim()) body = JSON.parse(text) as RevImportBody;
+    } catch {
+      // keep default
+    }
 
     let categoryIds: number[] | undefined;
 

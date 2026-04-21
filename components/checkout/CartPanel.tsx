@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { X, Lock, ShoppingCart } from 'lucide-react';
 import { useCartStore } from '@/lib/store';
@@ -36,22 +36,22 @@ export function CartPanel({ open, onClose, onCheckout }: CartPanelProps) {
       {/* Panel */}
       <aside
         className={cn(
-          'fixed right-0 top-0 h-full w-80 bg-[#1A1A1A] border-l border-[#2E2E2E] flex flex-col z-40 transition-transform duration-300',
+          'fixed right-0 top-0 h-full w-80 bg-[var(--bg-card)] border-l border-[var(--bg-hover)] flex flex-col z-40 transition-transform duration-300',
           'lg:static lg:translate-x-0 lg:z-auto lg:flex',
           open ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-[#2E2E2E]">
+        <div className="flex items-center justify-between px-4 py-4 border-b border-[var(--bg-hover)]">
           <div className="flex items-center gap-2">
             <ShoppingCart className="w-5 h-5 text-[#FF6B00]" />
-            <h2 className="font-display text-lg text-white">
+            <h2 className="font-display text-lg text-[var(--tx-primary)]">
               Cart ({items.length} item{items.length !== 1 ? 's' : ''})
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="lg:hidden p-1 text-[#9CA3AF] hover:text-white transition-colors min-h-0 min-w-0"
+            className="lg:hidden p-1 text-[var(--tx-muted)] hover:text-white transition-colors min-h-0 min-w-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -61,9 +61,9 @@ export function CartPanel({ open, onClose, onCheckout }: CartPanelProps) {
         <div className="flex-1 overflow-y-auto px-4">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-8">
-              <ShoppingCart className="w-12 h-12 text-[#2E2E2E] mb-3" />
-              <p className="text-[#9CA3AF] text-sm">Cart is empty</p>
-              <p className="text-[#9CA3AF] text-xs mt-1">Tap a part to add it</p>
+              <ShoppingCart className="w-12 h-12 text-[var(--bg-hover)] mb-3" />
+              <p className="text-[var(--tx-muted)] text-sm">Cart is empty</p>
+              <p className="text-[var(--tx-muted)] text-xs mt-1">Tap a part to add it</p>
             </div>
           ) : (
             items.map((item) => <CartItem key={item.part.id} item={item} />)
@@ -72,9 +72,9 @@ export function CartPanel({ open, onClose, onCheckout }: CartPanelProps) {
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="border-t border-[#2E2E2E] p-4 space-y-3">
+          <div className="border-t border-[var(--bg-hover)] p-4 space-y-3">
             {/* Subtotal */}
-            <div className="flex justify-between text-sm text-[#9CA3AF]">
+            <div className="flex justify-between text-sm text-[var(--tx-muted)]">
               <span>{items.length} unique part{items.length !== 1 ? 's' : ''}</span>
               <span>{totalUnits} total unit{totalUnits !== 1 ? 's' : ''}</span>
             </div>
@@ -91,7 +91,7 @@ export function CartPanel({ open, onClose, onCheckout }: CartPanelProps) {
             <button
               onClick={onCheckout}
               disabled={items.length === 0}
-              className="w-full py-3 rounded-xl bg-[#FF6B00] hover:bg-[#e55a00] text-white font-display text-lg transition-colors disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-[#FF6B00] hover:bg-[#e55a00] text-[var(--tx-primary)] font-display text-lg transition-colors disabled:opacity-50"
             >
               Check Out
             </button>
@@ -99,7 +99,7 @@ export function CartPanel({ open, onClose, onCheckout }: CartPanelProps) {
             {/* Clear */}
             <button
               onClick={handleClear}
-              className="w-full text-center text-xs text-[#9CA3AF] hover:text-red-400 transition-colors min-h-0"
+              className="w-full text-center text-xs text-[var(--tx-muted)] hover:text-red-400 transition-colors min-h-0"
             >
               Clear cart
             </button>

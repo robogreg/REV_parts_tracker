@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Check, Calendar, Package } from 'lucide-react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
@@ -31,7 +31,7 @@ function EventCard({ event, selected, onSelect }: {
   return (
     <button
       onClick={onSelect}
-      className="w-full text-left px-5 py-4 hover:bg-[#242424] transition-colors flex items-center gap-4 min-h-0"
+      className="w-full text-left px-5 py-4 hover:bg-[var(--bg-input)] transition-colors flex items-center gap-4 min-h-0"
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
@@ -40,8 +40,8 @@ function EventCard({ event, selected, onSelect }: {
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
           )}
         </div>
-        <p className="font-semibold text-white truncate">{event.name}</p>
-        <p className="text-xs text-[#9CA3AF] mt-0.5">
+        <p className="font-semibold text-[var(--tx-primary)] truncate">{event.name}</p>
+        <p className="text-xs text-[var(--tx-muted)] mt-0.5">
           {formatDate(event.startDate)} – {formatDate(event.endDate)} · {event.location}
         </p>
       </div>
@@ -79,10 +79,10 @@ export function EventSwitcher({ open, onClose }: EventSwitcherProps) {
           <Spinner />
         </div>
       ) : (
-        <div className="divide-y divide-[#2E2E2E]">
+        <div className="divide-y divide-[var(--bg-hover)]">
           {active.length > 0 && (
             <div>
-              <p className="px-5 py-2 text-xs font-semibold text-[#9CA3AF] uppercase tracking-widest">
+              <p className="px-5 py-2 text-xs font-semibold text-[var(--tx-muted)] uppercase tracking-widest">
                 Active
               </p>
               {active.map((e) => (
@@ -92,7 +92,7 @@ export function EventSwitcher({ open, onClose }: EventSwitcherProps) {
           )}
           {setup.length > 0 && (
             <div>
-              <p className="px-5 py-2 text-xs font-semibold text-[#9CA3AF] uppercase tracking-widest">
+              <p className="px-5 py-2 text-xs font-semibold text-[var(--tx-muted)] uppercase tracking-widest">
                 Setup
               </p>
               {setup.map((e) => (
@@ -101,7 +101,7 @@ export function EventSwitcher({ open, onClose }: EventSwitcherProps) {
             </div>
           )}
           {events.length === 0 && (
-            <p className="text-center text-[#9CA3AF] py-8 text-sm">No events available</p>
+            <p className="text-center text-[var(--tx-muted)] py-8 text-sm">No events available</p>
           )}
           {user?.isAdmin && (
             <div className="px-5 py-4">

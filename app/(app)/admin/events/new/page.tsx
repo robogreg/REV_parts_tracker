@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Search, Loader2 } from 'lucide-react';
+import { ArrowLeft, Search, Loader2, Users, CheckCircle2 } from 'lucide-react';
 import { getAuthHeaders } from '@/lib/firebase-client';
 import { Program, FirstEvent } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,7 @@ interface FormState {
   endDate: string;
   location: string;
   firstEventCode: string;
+  firstSeason: number;
   notes: string;
 }
 
@@ -29,13 +30,15 @@ const DEFAULT_FORM: FormState = {
   endDate: '',
   location: '',
   firstEventCode: '',
+  firstSeason: new Date().getFullYear(),
   notes: '',
 };
 
 export default function NewEventPage() {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
-  const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState<string | null>(null);
+  const [teamsSynced, setTeamsSynced] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // FIRST Event browser
@@ -57,10 +60,12 @@ export default function NewEventPage() {
       setError('Please fill in all required fields.');
       return;
     }
-    setLoading(true);
     setError(null);
+    setTeamsSynced(null);
 
     try {
+      // Step 1: create the event
+      setLoadingStep('Creating event…');
       const headers = await getAuthHeaders();
       const res = await fetch('/api/events', {
         method: 'POST',
@@ -72,6 +77,7 @@ export default function NewEventPage() {
           endDate: form.endDate,
           location: form.location,
           firstEventCode: form.firstEventCode || undefined,
+          firstSeason: form.firstEventCode ? form.firstSeason : undefined,
           notes: form.notes || undefined,
           status: 'setup',
         }),
@@ -79,36 +85,69 @@ export default function NewEventPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? 'Failed to create event');
+        throw new Error((data as { error?: string }).error ?? 'Failed to create event');
       }
 
-      const data = await res.json();
-      router.push(`/admin/events/${data.id}`);
+      const { event } = await res.json() as { event: { id: string } };
+
+      // Step 2: auto-sync teams from FIRST if an event code was selected
+      if (form.firstEventCode) {
+        setLoadingStep('Syncing teams from FIRST…');
+        try {
+          const syncRes = await fetch(`/api/events/${event.id}/teams/sync`, {
+            method: 'POST',
+            headers,
+          });
+          if (syncRes.ok) {
+            const syncData = await syncRes.json() as { synced: number };
+            setTeamsSynced(syncData.synced);
+            // Brief pause so the user sees the count before redirect
+            await new Promise((r) => setTimeout(r, 1200));
+          }
+          // If sync fails, still proceed — teams can be added manually
+        } catch {
+          // non-fatal
+        }
+      }
+
+      router.push(`/admin/events/${event.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
-      setLoading(false);
+      setLoadingStep(null);
     }
   }
 
-  async function handleBrowseFirst() {
+  async function fetchFirstEvents(program: 'FRC' | 'FTC', season: number) {
     setBrowseLoading(true);
     setBrowseError(null);
     setFirstEvents([]);
 
     try {
       const headers = await getAuthHeaders();
-      const res = await fetch(
-        `/api/first/events?program=${browseProgram}&season=${browseSeason}`,
-        { headers }
-      );
-      if (!res.ok) throw new Error('Failed to fetch FIRST events');
-      const data = await res.json();
+      const res = await fetch(`/api/first/events?program=${program}&season=${season}`, { headers });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error ?? `Error ${res.status}`);
+      }
+      const data = await res.json() as { events: FirstEvent[] };
       setFirstEvents(data.events ?? []);
     } catch (err) {
       setBrowseError(err instanceof Error ? err.message : 'Failed to load');
     } finally {
       setBrowseLoading(false);
     }
+  }
+
+  function openBrowse() {
+    setBrowseOpen(true);
+    setBrowseSearch('');
+    fetchFirstEvents(browseProgram, browseSeason);
+  }
+
+  function switchProgram(p: 'FRC' | 'FTC') {
+    setBrowseProgram(p);
+    setBrowseSearch('');
+    fetchFirstEvents(p, browseSeason);
   }
 
   function pickFirstEvent(ev: FirstEvent) {
@@ -120,6 +159,7 @@ export default function NewEventPage() {
       endDate: ev.endDate.slice(0, 10),
       location: [ev.venue, ev.city, ev.stateprov, ev.country].filter(Boolean).join(', '),
       firstEventCode: ev.code,
+      firstSeason: ev.season,
     }));
     setBrowseOpen(false);
   }
@@ -133,30 +173,28 @@ export default function NewEventPage() {
   );
 
   const inputClass =
-    'w-full bg-[#242424] border border-[#2E2E2E] rounded-xl px-3 py-2.5 text-sm text-white placeholder-[#9CA3AF] outline-none focus:border-[#FF6B00] transition-colors';
-  const labelClass = 'block text-xs font-medium text-[#9CA3AF] mb-1.5';
+    'w-full bg-[var(--bg-input)] border border-[var(--bg-hover)] rounded-xl px-3 py-2.5 text-sm text-[var(--tx-primary)] placeholder-[var(--tx-muted)] outline-none focus:border-[#FF6B00] transition-colors';
+  const labelClass = 'block text-xs font-medium text-[var(--tx-muted)] mb-1.5';
+  const isLoading = loadingStep !== null;
 
   return (
     <div className="p-4 lg:p-6 max-w-2xl mx-auto">
       {/* Back */}
       <Link
         href="/admin/events"
-        className="inline-flex items-center gap-2 text-sm text-[#9CA3AF] hover:text-white transition-colors mb-6"
+        className="inline-flex items-center gap-2 text-sm text-[var(--tx-muted)] hover:text-white transition-colors mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Events
       </Link>
 
-      <div className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-2xl overflow-hidden">
-        <div className="px-6 py-5 border-b border-[#2E2E2E] flex items-center justify-between">
-          <h1 className="text-lg font-display font-bold text-white">Create New Event</h1>
+      <div className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-2xl overflow-hidden">
+        <div className="px-6 py-5 border-b border-[var(--bg-hover)] flex items-center justify-between">
+          <h1 className="text-lg font-display font-bold text-[var(--tx-primary)]">Create New Event</h1>
           <button
             type="button"
-            onClick={() => {
-              setBrowseOpen(true);
-              handleBrowseFirst();
-            }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#2E2E2E] hover:bg-[#3E3E3E] text-white text-sm transition-colors"
+            onClick={openBrowse}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--bg-hover)] hover:bg-[var(--bg-hover2)] text-[var(--tx-primary)] text-sm transition-colors"
           >
             <Search className="w-4 h-4" />
             Browse FIRST Events
@@ -173,7 +211,7 @@ export default function NewEventPage() {
               type="text"
               value={form.name}
               onChange={(e) => setField('name', e.target.value)}
-              placeholder="e.g. 2025 FRC Sacramento Regional"
+              placeholder="e.g. 2026 FRC Sacramento Regional"
               className={inputClass}
               required
             />
@@ -192,7 +230,7 @@ export default function NewEventPage() {
                     'flex-1 py-2 rounded-xl text-sm font-medium transition-colors border',
                     form.program === p
                       ? 'bg-[#FF6B00]/20 border-[#FF6B00] text-[#FF6B00]'
-                      : 'border-[#2E2E2E] text-[#9CA3AF] hover:text-white hover:bg-[#2E2E2E]'
+                      : 'border-[var(--bg-hover)] text-[var(--tx-muted)] hover:text-white hover:bg-[var(--bg-hover)]'
                   )}
                 >
                   {p}
@@ -211,7 +249,7 @@ export default function NewEventPage() {
                 type="date"
                 value={form.startDate}
                 onChange={(e) => setField('startDate', e.target.value)}
-                className={cn(inputClass, 'text-white [color-scheme:dark]')}
+                className={cn(inputClass, 'text-[var(--tx-primary)] [color-scheme:dark]')}
                 required
               />
             </div>
@@ -223,7 +261,7 @@ export default function NewEventPage() {
                 type="date"
                 value={form.endDate}
                 onChange={(e) => setField('endDate', e.target.value)}
-                className={cn(inputClass, 'text-white [color-scheme:dark]')}
+                className={cn(inputClass, 'text-[var(--tx-primary)] [color-scheme:dark]')}
                 required
               />
             </div>
@@ -244,16 +282,40 @@ export default function NewEventPage() {
             />
           </div>
 
-          {/* FIRST Event Code */}
+          {/* FIRST Event Code + Season */}
           <div>
-            <label className={labelClass}>FIRST Event Code (optional)</label>
-            <input
-              type="text"
-              value={form.firstEventCode}
-              onChange={(e) => setField('firstEventCode', e.target.value.toUpperCase())}
-              placeholder="e.g. CASAC"
-              className={cn(inputClass, 'font-mono')}
-            />
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <label className="text-xs font-medium text-[var(--tx-muted)]">FIRST Event Code</label>
+              {form.firstEventCode && (
+                <span className="flex items-center gap-1 text-[10px] font-medium bg-green-900/30 text-green-400 border border-green-800/40 rounded-full px-2 py-0.5">
+                  <CheckCircle2 className="w-3 h-3" /> Teams will be auto-synced
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-2">
+                <input
+                  type="text"
+                  value={form.firstEventCode}
+                  onChange={(e) => setField('firstEventCode', e.target.value.toUpperCase())}
+                  placeholder="e.g. CASAC — or browse above"
+                  className={cn(inputClass, 'font-mono')}
+                />
+              </div>
+              <div>
+                <input
+                  type="number"
+                  value={form.firstSeason}
+                  onChange={(e) =>
+                    setField('firstSeason', parseInt(e.target.value) || new Date().getFullYear())
+                  }
+                  min={2020}
+                  max={2030}
+                  placeholder="Season"
+                  className={inputClass}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Notes */}
@@ -274,20 +336,33 @@ export default function NewEventPage() {
             </p>
           )}
 
+          {/* Loading progress */}
+          {isLoading && (
+            <div className="flex items-center gap-3 bg-[var(--bg-input)] border border-[var(--bg-hover)] rounded-xl px-4 py-3">
+              <Spinner size="sm" className="text-[#FF6B00]" />
+              <span className="text-sm text-[var(--tx-primary)]">{loadingStep}</span>
+              {teamsSynced !== null && (
+                <span className="ml-auto flex items-center gap-1.5 text-green-400 text-sm">
+                  <Users className="w-4 h-4" /> {teamsSynced} teams synced
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex gap-3 justify-end pt-2">
             <Link
               href="/admin/events"
-              className="px-4 py-2 rounded-xl text-sm text-[#9CA3AF] hover:text-white transition-colors"
+              className="px-4 py-2 rounded-xl text-sm text-[var(--tx-muted)] hover:text-white transition-colors"
             >
               Cancel
             </Link>
             <button
               type="submit"
-              disabled={loading}
-              className="flex items-center gap-2 px-6 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#e56000] text-white text-sm font-semibold transition-colors disabled:opacity-60"
+              disabled={isLoading}
+              className="flex items-center gap-2 px-6 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#e56000] text-[var(--tx-primary)] text-sm font-semibold transition-colors disabled:opacity-60"
             >
-              {loading && <Spinner size="sm" className="text-white" />}
+              {isLoading && <Spinner size="sm" className="text-[var(--tx-primary)]" />}
               Create Event
             </button>
           </div>
@@ -303,88 +378,109 @@ export default function NewEventPage() {
       >
         <div className="px-6 py-4 space-y-4">
           {/* Controls */}
-          <div className="flex flex-wrap gap-3">
-            <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Program toggle */}
+            <div className="flex gap-1 bg-[var(--bg-base)] border border-[var(--bg-hover)] rounded-lg p-0.5">
               {(['FRC', 'FTC'] as const).map((p) => (
                 <button
                   key={p}
-                  onClick={() => setBrowseProgram(p)}
+                  onClick={() => switchProgram(p)}
+                  disabled={browseLoading}
                   className={cn(
-                    'px-3 py-1.5 rounded-lg text-sm transition-colors border',
+                    'px-4 py-1.5 rounded-md text-sm font-medium transition-colors',
                     browseProgram === p
-                      ? 'bg-[#FF6B00]/20 border-[#FF6B00] text-[#FF6B00]'
-                      : 'border-[#2E2E2E] text-[#9CA3AF] hover:text-white hover:bg-[#2E2E2E]'
+                      ? 'bg-[#FF6B00] text-[var(--tx-primary)]'
+                      : 'text-[var(--tx-muted)] hover:text-white'
                   )}
                 >
                   {p}
                 </button>
               ))}
             </div>
-            <input
-              type="number"
-              value={browseSeason}
-              onChange={(e) => setBrowseSeason(parseInt(e.target.value))}
-              min={2020}
-              max={2030}
-              className="w-24 bg-[#242424] border border-[#2E2E2E] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#FF6B00]"
-            />
+
+            {/* Season */}
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-[var(--tx-muted)]">Season</label>
+              <input
+                type="number"
+                value={browseSeason}
+                onChange={(e) => setBrowseSeason(parseInt(e.target.value))}
+                min={2020}
+                max={2030}
+                className="w-20 bg-[var(--bg-input)] border border-[var(--bg-hover)] rounded-lg px-3 py-1.5 text-sm text-[var(--tx-primary)] outline-none focus:border-[#FF6B00]"
+              />
+            </div>
+
             <button
-              onClick={handleBrowseFirst}
+              onClick={() => fetchFirstEvents(browseProgram, browseSeason)}
               disabled={browseLoading}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#2E2E2E] hover:bg-[#3E3E3E] text-white text-sm transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg-hover)] hover:bg-[var(--bg-hover2)] text-[var(--tx-primary)] text-sm transition-colors disabled:opacity-60"
             >
               {browseLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               Search
             </button>
+
+            {firstEvents.length > 0 && (
+              <span className="text-xs text-[var(--tx-muted)] ml-auto">
+                {filteredFirstEvents.length} of {firstEvents.length} events
+              </span>
+            )}
           </div>
 
           {/* Search filter */}
           {firstEvents.length > 0 && (
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF] pointer-events-none" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--tx-muted)] pointer-events-none" />
               <input
                 type="search"
                 value={browseSearch}
                 onChange={(e) => setBrowseSearch(e.target.value)}
                 placeholder="Filter by name, code, city…"
-                className="w-full bg-[#242424] border border-[#2E2E2E] rounded-xl pl-9 pr-4 py-2 text-sm text-white placeholder-[#9CA3AF] outline-none focus:border-[#FF6B00]"
+                autoFocus
+                className="w-full bg-[var(--bg-input)] border border-[var(--bg-hover)] rounded-xl pl-9 pr-4 py-2 text-sm text-[var(--tx-primary)] placeholder-[var(--tx-muted)] outline-none focus:border-[#FF6B00]"
               />
             </div>
           )}
 
+          {/* Error */}
           {browseError && (
             <p className="text-sm text-red-400 bg-red-900/20 border border-red-800/40 rounded-xl px-3 py-2">
               {browseError}
             </p>
           )}
 
+          {/* Loading */}
           {browseLoading && (
-            <div className="flex justify-center py-12">
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
               <Spinner size="lg" />
+              <p className="text-sm text-[var(--tx-muted)]">
+                Loading {browseProgram} {browseSeason} events…
+              </p>
             </div>
           )}
 
+          {/* Results */}
           {!browseLoading && filteredFirstEvents.length > 0 && (
-            <div className="space-y-1 max-h-96 overflow-y-auto pr-1">
+            <div className="space-y-0.5 max-h-[420px] overflow-y-auto pr-1">
               {filteredFirstEvents.map((ev) => (
                 <button
                   key={ev.code}
                   onClick={() => pickFirstEvent(ev)}
-                  className="w-full text-left px-4 py-3 rounded-xl hover:bg-[#2E2E2E] transition-colors group"
+                  className="w-full text-left px-4 py-3 rounded-xl hover:bg-[var(--bg-hover)] transition-colors group"
                 >
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white group-hover:text-[#FF6B00] transition-colors">
+                      <p className="text-sm font-medium text-[var(--tx-primary)] group-hover:text-[#FF6B00] transition-colors truncate">
                         {ev.name}
                       </p>
-                      <p className="text-xs text-[#9CA3AF] mt-0.5">
-                        <span className="font-mono text-[#FF6B00]">{ev.code}</span>
-                        {ev.city && ` · ${ev.city}`}
-                        {ev.stateprov && `, ${ev.stateprov}`}
+                      <p className="text-xs text-[var(--tx-muted)] mt-0.5 flex items-center gap-1.5">
+                        <span className="font-mono text-[#FF6B00] font-semibold">{ev.code}</span>
+                        {ev.type && <span className="text-[var(--tx-faint)]">· {ev.type}</span>}
+                        {ev.city && <span>· {ev.city}{ev.stateprov && `, ${ev.stateprov}`}</span>}
                       </p>
                     </div>
-                    <p className="text-xs text-[#9CA3AF] whitespace-nowrap flex-shrink-0">
-                      {ev.startDate.slice(0, 10)} — {ev.endDate.slice(0, 10)}
+                    <p className="text-xs text-[var(--tx-faint)] whitespace-nowrap flex-shrink-0 font-mono">
+                      {ev.startDate.slice(0, 10)}
                     </p>
                   </div>
                 </button>
@@ -393,13 +489,15 @@ export default function NewEventPage() {
           )}
 
           {!browseLoading && firstEvents.length > 0 && filteredFirstEvents.length === 0 && (
-            <p className="text-center text-[#9CA3AF] text-sm py-8">No matching events.</p>
+            <p className="text-center text-[var(--tx-muted)] text-sm py-8">No matching events.</p>
           )}
 
           {!browseLoading && firstEvents.length === 0 && !browseError && (
-            <p className="text-center text-[#9CA3AF] text-sm py-8">
-              Click Search to load events for {browseProgram} {browseSeason}.
-            </p>
+            <div className="text-center py-16 space-y-2">
+              <p className="text-[var(--tx-muted)] text-sm">
+                No events loaded. Click Search to fetch {browseProgram} {browseSeason} events.
+              </p>
+            </div>
           )}
         </div>
       </Modal>

@@ -34,5 +34,6 @@ export async function requireAuth(request: NextRequest): Promise<AuthUser> {
 export function handleApiError(err: unknown): NextResponse {
   if (err instanceof NextResponse) return err;
   console.error('[API Error]', err);
-  return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  const message = err instanceof Error ? err.message : 'Internal server error';
+  return NextResponse.json({ error: message }, { status: 500 });
 }

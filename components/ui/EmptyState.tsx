@@ -1,4 +1,4 @@
-import { LucideIcon } from 'lucide-react';
+﻿import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface EmptyStateProps {
@@ -13,12 +13,12 @@ export function EmptyState({ icon: Icon, title, description, action, className }
   return (
     <div className={cn('flex flex-col items-center justify-center py-16 px-4 text-center', className)}>
       {Icon && (
-        <div className="w-16 h-16 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] flex items-center justify-center mb-4">
-          <Icon className="w-8 h-8 text-[#9CA3AF]" />
+        <div className="w-16 h-16 rounded-2xl bg-[var(--bg-card)] border border-[var(--bg-hover)] flex items-center justify-center mb-4">
+          <Icon className="w-8 h-8 text-[var(--tx-muted)]" />
         </div>
       )}
-      <h3 className="font-display text-lg text-white mb-1">{title}</h3>
-      {description && <p className="text-sm text-[#9CA3AF] max-w-xs">{description}</p>}
+      <h3 className="font-display text-lg text-[var(--tx-primary)] mb-1">{title}</h3>
+      {description && <p className="text-sm text-[var(--tx-muted)] max-w-xs">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );

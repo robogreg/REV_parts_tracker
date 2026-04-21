@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Lock, Unlock, X } from 'lucide-react';
 import { CartItem as CartItemType } from '@/lib/types';
@@ -19,20 +19,20 @@ export function CartItem({ item }: CartItemProps) {
   const unitTotal = item.quantity;
 
   return (
-    <div className="flex flex-col gap-2 py-3 border-b border-[#2E2E2E] last:border-0">
+    <div className="flex flex-col gap-2 py-3 border-b border-[var(--bg-hover)] last:border-0">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-white truncate">{item.part.name}</p>
-          <p className="text-xs font-mono text-[#9CA3AF]">{item.part.sku}</p>
+          <p className="text-sm font-medium text-[var(--tx-primary)] truncate">{item.part.name}</p>
+          <p className="text-xs font-mono text-[var(--tx-muted)]">{item.part.sku}</p>
           {packCount !== null && (
-            <p className="text-xs text-[#9CA3AF] mt-0.5">
+            <p className="text-xs text-[var(--tx-muted)] mt-0.5">
               {packCount} pack{packCount !== 1 ? 's' : ''} ({unitTotal} units)
             </p>
           )}
         </div>
         <button
           onClick={() => removeItem(item.part.id)}
-          className="p-1 text-[#9CA3AF] hover:text-red-400 transition-colors min-h-0 min-w-0"
+          className="p-1 text-[var(--tx-muted)] hover:text-red-400 transition-colors min-h-0 min-w-0"
         >
           <X className="w-4 h-4" />
         </button>
@@ -51,7 +51,7 @@ export function CartItem({ item }: CartItemProps) {
               'text-xs px-2 py-0.5 rounded-full border',
               item.unitType === 'pack'
                 ? 'bg-blue-900/30 text-blue-400 border-blue-800/50'
-                : 'bg-[#2E2E2E] text-[#9CA3AF] border-[#2E2E2E]'
+                : 'bg-[var(--bg-hover)] text-[var(--tx-muted)] border-[var(--bg-hover)]'
             )}
           >
             {item.unitType}
@@ -63,7 +63,7 @@ export function CartItem({ item }: CartItemProps) {
               'flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border transition-colors min-h-0 min-w-0',
               item.isLoaner
                 ? 'bg-[#FF6B00]/20 text-[#FF6B00] border-[#FF6B00]/40'
-                : 'bg-[#2E2E2E] text-[#9CA3AF] border-[#2E2E2E] hover:text-white'
+                : 'bg-[var(--bg-hover)] text-[var(--tx-muted)] border-[var(--bg-hover)] hover:text-white'
             )}
           >
             {item.isLoaner ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}

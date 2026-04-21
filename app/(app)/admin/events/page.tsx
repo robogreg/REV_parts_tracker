@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -73,7 +73,7 @@ export default function EventsListPage() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
-      router.push(`/admin/events/${data.id}`);
+      router.push(`/admin/events/${data.event.id}`);
     },
   });
 
@@ -107,12 +107,12 @@ export default function EventsListPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-white">Events</h1>
-          <p className="text-sm text-[#9CA3AF] mt-0.5">{events.length} event{events.length !== 1 ? 's' : ''}</p>
+          <h1 className="text-2xl font-display font-bold text-[var(--tx-primary)]">Events</h1>
+          <p className="text-sm text-[var(--tx-muted)] mt-0.5">{events.length} event{events.length !== 1 ? 's' : ''}</p>
         </div>
         <Link
           href="/admin/events/new"
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#e56000] text-white text-sm font-medium transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#e56000] text-[var(--tx-primary)] text-sm font-medium transition-colors"
         >
           <Plus className="w-4 h-4" />
           Create Event
@@ -128,7 +128,7 @@ export default function EventsListPage() {
           action={
             <Link
               href="/admin/events/new"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#e56000] text-white text-sm font-medium transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#e56000] text-[var(--tx-primary)] text-sm font-medium transition-colors"
             >
               <Plus className="w-4 h-4" />
               Create Event
@@ -136,11 +136,11 @@ export default function EventsListPage() {
           }
         />
       ) : (
-        <div className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-2xl overflow-hidden">
+        <div className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#2E2E2E] text-xs text-[#9CA3AF]">
+                <tr className="border-b border-[var(--bg-hover)] text-xs text-[var(--tx-muted)]">
                   <th className="text-left px-4 py-3 font-medium">Name</th>
                   <th className="text-left px-4 py-3 font-medium">Program</th>
                   <th className="text-left px-4 py-3 font-medium">Dates</th>
@@ -153,12 +153,12 @@ export default function EventsListPage() {
                 {events.map((event) => (
                   <tr
                     key={event.id}
-                    className="border-b border-[#2E2E2E] last:border-0 hover:bg-[#242424] transition-colors"
+                    className="border-b border-[var(--bg-hover)] last:border-0 hover:bg-[var(--bg-input)] transition-colors"
                   >
                     <td className="px-4 py-3">
-                      <p className="text-white font-medium">{event.name}</p>
+                      <p className="text-[var(--tx-primary)] font-medium">{event.name}</p>
                       {event.firstEventCode && (
-                        <p className="text-[10px] text-[#9CA3AF] font-mono mt-0.5">
+                        <p className="text-[10px] text-[var(--tx-muted)] font-mono mt-0.5">
                           {event.firstEventCode}
                         </p>
                       )}
@@ -166,10 +166,10 @@ export default function EventsListPage() {
                     <td className="px-4 py-3">
                       <Badge variant="orange">{event.program}</Badge>
                     </td>
-                    <td className="px-4 py-3 text-[#9CA3AF] text-xs whitespace-nowrap">
+                    <td className="px-4 py-3 text-[var(--tx-muted)] text-xs whitespace-nowrap">
                       {formatDate(event.startDate)} — {formatDate(event.endDate)}
                     </td>
-                    <td className="px-4 py-3 text-[#9CA3AF] text-xs max-w-[160px] truncate">
+                    <td className="px-4 py-3 text-[var(--tx-muted)] text-xs max-w-[160px] truncate">
                       {event.location}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -182,7 +182,7 @@ export default function EventsListPage() {
                         {/* Edit */}
                         <Link
                           href={`/admin/events/${event.id}`}
-                          className="p-2 rounded-lg text-[#9CA3AF] hover:text-white hover:bg-[#2E2E2E] transition-colors"
+                          className="p-2 rounded-lg text-[var(--tx-muted)] hover:text-white hover:bg-[var(--bg-hover)] transition-colors"
                           title="Edit"
                         >
                           <Edit2 className="w-4 h-4" />
@@ -192,7 +192,7 @@ export default function EventsListPage() {
                         <button
                           onClick={() => cloneMutation.mutate(event)}
                           disabled={cloneMutation.isPending}
-                          className="p-2 rounded-lg text-[#9CA3AF] hover:text-white hover:bg-[#2E2E2E] transition-colors"
+                          className="p-2 rounded-lg text-[var(--tx-muted)] hover:text-white hover:bg-[var(--bg-hover)] transition-colors"
                           title="Clone"
                         >
                           {cloneMutation.isPending ? (
@@ -208,7 +208,7 @@ export default function EventsListPage() {
                             setStatusTarget(event);
                             setStatusValue(event.status);
                           }}
-                          className="p-2 rounded-lg text-[#9CA3AF] hover:text-white hover:bg-[#2E2E2E] transition-colors"
+                          className="p-2 rounded-lg text-[var(--tx-muted)] hover:text-white hover:bg-[var(--bg-hover)] transition-colors"
                           title="Change status"
                         >
                           <ChevronDown className="w-4 h-4" />
@@ -217,7 +217,7 @@ export default function EventsListPage() {
                         {/* Delete */}
                         <button
                           onClick={() => setDeleteTarget(event)}
-                          className="p-2 rounded-lg text-[#9CA3AF] hover:text-red-400 hover:bg-red-900/10 transition-colors"
+                          className="p-2 rounded-lg text-[var(--tx-muted)] hover:text-red-400 hover:bg-red-900/10 transition-colors"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -240,9 +240,9 @@ export default function EventsListPage() {
         size="sm"
       >
         <div className="px-6 py-4 space-y-4">
-          <p className="text-sm text-[#9CA3AF]">
+          <p className="text-sm text-[var(--tx-muted)]">
             Are you sure you want to delete{' '}
-            <span className="text-white font-semibold">{deleteTarget?.name}</span>? This action
+            <span className="text-[var(--tx-primary)] font-semibold">{deleteTarget?.name}</span>? This action
             cannot be undone and will remove all associated inventory and transactions.
           </p>
           {deleteMutation.isError && (
@@ -251,19 +251,19 @@ export default function EventsListPage() {
             </p>
           )}
         </div>
-        <div className="px-6 py-4 border-t border-[#2E2E2E] flex gap-3 justify-end">
+        <div className="px-6 py-4 border-t border-[var(--bg-hover)] flex gap-3 justify-end">
           <button
             onClick={() => setDeleteTarget(null)}
-            className="px-4 py-2 rounded-xl text-sm text-[#9CA3AF] hover:text-white transition-colors"
+            className="px-4 py-2 rounded-xl text-sm text-[var(--tx-muted)] hover:text-white transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
             disabled={deleteMutation.isPending}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-700 hover:bg-red-600 text-white text-sm font-medium transition-colors disabled:opacity-60"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-700 hover:bg-red-600 text-[var(--tx-primary)] text-sm font-medium transition-colors disabled:opacity-60"
           >
-            {deleteMutation.isPending && <Spinner size="sm" className="text-white" />}
+            {deleteMutation.isPending && <Spinner size="sm" className="text-[var(--tx-primary)]" />}
             Delete Event
           </button>
         </div>
@@ -277,8 +277,8 @@ export default function EventsListPage() {
         size="sm"
       >
         <div className="px-6 py-4 space-y-4">
-          <p className="text-xs text-[#9CA3AF]">
-            Event: <span className="text-white">{statusTarget?.name}</span>
+          <p className="text-xs text-[var(--tx-muted)]">
+            Event: <span className="text-[var(--tx-primary)]">{statusTarget?.name}</span>
           </p>
           <div className="flex gap-2">
             {STATUS_OPTIONS.map((s) => (
@@ -289,7 +289,7 @@ export default function EventsListPage() {
                   'flex-1 py-2 rounded-xl text-sm font-medium capitalize transition-colors border',
                   statusValue === s
                     ? 'bg-[#FF6B00]/20 border-[#FF6B00] text-[#FF6B00]'
-                    : 'border-[#2E2E2E] text-[#9CA3AF] hover:text-white hover:bg-[#2E2E2E]'
+                    : 'border-[var(--bg-hover)] text-[var(--tx-muted)] hover:text-white hover:bg-[var(--bg-hover)]'
                 )}
               >
                 {s}
@@ -302,10 +302,10 @@ export default function EventsListPage() {
             </p>
           )}
         </div>
-        <div className="px-6 py-4 border-t border-[#2E2E2E] flex gap-3 justify-end">
+        <div className="px-6 py-4 border-t border-[var(--bg-hover)] flex gap-3 justify-end">
           <button
             onClick={() => setStatusTarget(null)}
-            className="px-4 py-2 rounded-xl text-sm text-[#9CA3AF] hover:text-white transition-colors"
+            className="px-4 py-2 rounded-xl text-sm text-[var(--tx-muted)] hover:text-white transition-colors"
           >
             Cancel
           </button>
@@ -315,9 +315,9 @@ export default function EventsListPage() {
               statusMutation.mutate({ id: statusTarget.id, status: statusValue })
             }
             disabled={statusMutation.isPending}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#e56000] text-white text-sm font-medium transition-colors disabled:opacity-60"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#e56000] text-[var(--tx-primary)] text-sm font-medium transition-colors disabled:opacity-60"
           >
-            {statusMutation.isPending && <Spinner size="sm" className="text-white" />}
+            {statusMutation.isPending && <Spinner size="sm" className="text-[var(--tx-primary)]" />}
             Update Status
           </button>
         </div>

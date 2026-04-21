@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Minus, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -17,7 +17,7 @@ export function QuantityControl({ value, onChange, min = 1, max, className }: Qu
       <button
         onClick={() => onChange(Math.max(min, value - 1))}
         disabled={value <= min}
-        className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#2E2E2E] hover:bg-[#3E3E3E] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors min-h-0 min-w-0"
+        className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--bg-hover)] hover:bg-[var(--bg-hover2)] text-[var(--tx-primary)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors min-h-0 min-w-0"
         aria-label="Decrease"
       >
         <Minus className="w-3.5 h-3.5" />
@@ -26,7 +26,7 @@ export function QuantityControl({ value, onChange, min = 1, max, className }: Qu
       <button
         onClick={() => onChange(max ? Math.min(max, value + 1) : value + 1)}
         disabled={max !== undefined && value >= max}
-        className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#2E2E2E] hover:bg-[#3E3E3E] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors min-h-0 min-w-0"
+        className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--bg-hover)] hover:bg-[var(--bg-hover2)] text-[var(--tx-primary)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors min-h-0 min-w-0"
         aria-label="Increase"
       >
         <Plus className="w-3.5 h-3.5" />

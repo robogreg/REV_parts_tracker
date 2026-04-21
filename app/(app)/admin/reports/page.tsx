@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -151,7 +151,6 @@ export default function ReportsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['reports-transactions', filters, page],
     queryFn: () => fetchFilteredTransactions(filters, page),
-    enabled: !!filters.eventId,
   });
 
   const transactions = data?.transactions ?? [];
@@ -176,7 +175,6 @@ export default function ReportsPage() {
   }, [transactions]);
 
   async function handleExportAll() {
-    if (!filters.eventId) return;
     setExporting(true);
     try {
       const all = await fetchAllForExport(filters);
@@ -189,7 +187,6 @@ export default function ReportsPage() {
   }
 
   async function handleExportLoaners() {
-    if (!filters.eventId) return;
     setExporting(true);
     try {
       const loanerFilters = { ...filters, loaner: 'true' as const };
@@ -203,29 +200,29 @@ export default function ReportsPage() {
   }
 
   const inputClass =
-    'bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-sm text-white placeholder-[#9CA3AF] outline-none focus:border-[#FF6B00] transition-colors';
+    'bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-xl px-3 py-2 text-sm text-[var(--tx-primary)] placeholder-[var(--tx-muted)] outline-none focus:border-[#FF6B00] transition-colors';
 
   return (
     <div className="p-4 lg:p-6 max-w-7xl mx-auto space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-display font-bold text-white">Reports & Audit</h1>
-          <p className="text-sm text-[#9CA3AF] mt-0.5">Transaction history and loaner tracking</p>
+          <h1 className="text-2xl font-display font-bold text-[var(--tx-primary)]">Reports & Audit</h1>
+          <p className="text-sm text-[var(--tx-muted)] mt-0.5">Transaction history and loaner tracking</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleExportAll}
-            disabled={!filters.eventId || exporting}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#2E2E2E] hover:bg-[#3E3E3E] text-white text-sm transition-colors disabled:opacity-40"
+            disabled={exporting}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--bg-hover)] hover:bg-[var(--bg-hover2)] text-[var(--tx-primary)] text-sm transition-colors disabled:opacity-40"
           >
             {exporting ? <Spinner size="sm" /> : <Download className="w-4 h-4" />}
             Export All CSV
           </button>
           <button
             onClick={handleExportLoaners}
-            disabled={!filters.eventId || exporting}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#2E2E2E] hover:bg-[#3E3E3E] text-white text-sm transition-colors disabled:opacity-40"
+            disabled={exporting}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--bg-hover)] hover:bg-[var(--bg-hover2)] text-[var(--tx-primary)] text-sm transition-colors disabled:opacity-40"
           >
             <Download className="w-4 h-4" />
             Export Loaners
@@ -234,15 +231,15 @@ export default function ReportsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-2xl p-4">
+      <div className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-2xl p-4">
         <div className="flex items-center gap-2 mb-3">
-          <Filter className="w-4 h-4 text-[#9CA3AF]" />
-          <span className="text-sm font-medium text-white">Filters</span>
+          <Filter className="w-4 h-4 text-[var(--tx-muted)]" />
+          <span className="text-sm font-medium text-[var(--tx-primary)]">Filters</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {/* Event */}
           <div className="col-span-2 sm:col-span-1">
-            <label className="block text-[10px] text-[#9CA3AF] mb-1">Event</label>
+            <label className="block text-[10px] text-[var(--tx-muted)] mb-1">Event</label>
             {eventsLoading ? (
               <Spinner size="sm" />
             ) : (
@@ -263,7 +260,7 @@ export default function ReportsPage() {
 
           {/* From date */}
           <div>
-            <label className="block text-[10px] text-[#9CA3AF] mb-1">From</label>
+            <label className="block text-[10px] text-[var(--tx-muted)] mb-1">From</label>
             <input
               type="date"
               value={filters.from}
@@ -274,7 +271,7 @@ export default function ReportsPage() {
 
           {/* To date */}
           <div>
-            <label className="block text-[10px] text-[#9CA3AF] mb-1">To</label>
+            <label className="block text-[10px] text-[var(--tx-muted)] mb-1">To</label>
             <input
               type="date"
               value={filters.to}
@@ -285,7 +282,7 @@ export default function ReportsPage() {
 
           {/* Staff */}
           <div>
-            <label className="block text-[10px] text-[#9CA3AF] mb-1">Staff</label>
+            <label className="block text-[10px] text-[var(--tx-muted)] mb-1">Staff</label>
             <select
               value={filters.staffEmail}
               onChange={(e) => setFilter('staffEmail', e.target.value)}
@@ -302,7 +299,7 @@ export default function ReportsPage() {
 
           {/* Team search */}
           <div>
-            <label className="block text-[10px] text-[#9CA3AF] mb-1">Team #</label>
+            <label className="block text-[10px] text-[var(--tx-muted)] mb-1">Team #</label>
             <input
               type="text"
               value={filters.teamSearch}
@@ -314,7 +311,7 @@ export default function ReportsPage() {
 
           {/* Loaner filter */}
           <div>
-            <label className="block text-[10px] text-[#9CA3AF] mb-1">Loaner</label>
+            <label className="block text-[10px] text-[var(--tx-muted)] mb-1">Loaner</label>
             <select
               value={filters.loaner}
               onChange={(e) => setFilter('loaner', e.target.value as Filters['loaner'])}
@@ -329,18 +326,18 @@ export default function ReportsPage() {
       </div>
 
       {/* Summary bar */}
-      {filters.eventId && (
-        <div className="flex items-center gap-3 px-4 py-2.5 bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl text-sm">
-          <span className="text-white font-medium">
+      {transactions.length > 0 && (
+        <div className="flex items-center gap-3 px-4 py-2.5 bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-xl text-sm">
+          <span className="text-[var(--tx-primary)] font-medium">
             Showing {transactions.length} of {total} transactions
           </span>
-          <span className="text-[#9CA3AF]">·</span>
-          <span className="text-[#9CA3AF]">
+          <span className="text-[var(--tx-muted)]">·</span>
+          <span className="text-[var(--tx-muted)]">
             {transactions.reduce((s, tx) => s + tx.totalItems, 0)} units
           </span>
           {unreturned.length > 0 && (
             <>
-              <span className="text-[#9CA3AF]">·</span>
+              <span className="text-[var(--tx-muted)]">·</span>
               <span className="text-amber-400 font-medium">
                 {unreturned.length} unreturned loaner{unreturned.length !== 1 ? 's' : ''}
               </span>
@@ -350,47 +347,41 @@ export default function ReportsPage() {
       )}
 
       {/* Results table */}
-      {!filters.eventId ? (
-        <div className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-2xl p-12 text-center text-[#9CA3AF]">
-          Select an event to view transactions.
-        </div>
-      ) : (
-        <div className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-2xl overflow-hidden">
-          <TransactionTable
-            transactions={transactions}
-            total={total}
-            page={page}
-            onPageChange={setPage}
-            loading={isLoading}
-          />
-        </div>
-      )}
+      <div className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-2xl overflow-hidden">
+        <TransactionTable
+          transactions={transactions}
+          total={total}
+          page={page}
+          onPageChange={setPage}
+          loading={isLoading}
+        />
+      </div>
 
       {/* ── Unreturned loaners section ──────────────────────────────────── */}
       {filters.eventId && unreturned.length > 0 && (
-        <div className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-2xl overflow-hidden">
+        <div className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-2xl overflow-hidden">
           <button
             onClick={() => setLoanersOpen((o) => !o)}
-            className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#242424] transition-colors"
+            className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--bg-input)] transition-colors"
           >
             <div className="flex items-center gap-3">
               <RotateCcw className="w-5 h-5 text-amber-400" />
-              <span className="font-semibold text-white">
+              <span className="font-semibold text-[var(--tx-primary)]">
                 Unreturned Loaners ({unreturned.length})
               </span>
             </div>
             {loanersOpen ? (
-              <ChevronDown className="w-5 h-5 text-[#9CA3AF]" />
+              <ChevronDown className="w-5 h-5 text-[var(--tx-muted)]" />
             ) : (
-              <ChevronRight className="w-5 h-5 text-[#9CA3AF]" />
+              <ChevronRight className="w-5 h-5 text-[var(--tx-muted)]" />
             )}
           </button>
 
           {loanersOpen && (
-            <div className="border-t border-[#2E2E2E] overflow-x-auto">
+            <div className="border-t border-[var(--bg-hover)] overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[#2E2E2E] text-xs text-[#9CA3AF]">
+                  <tr className="border-b border-[var(--bg-hover)] text-xs text-[var(--tx-muted)]">
                     <th className="text-left px-4 py-3 font-medium">Time</th>
                     <th className="text-left px-4 py-3 font-medium">Staff</th>
                     <th className="text-left px-4 py-3 font-medium">Team</th>
@@ -404,19 +395,19 @@ export default function ReportsPage() {
                   {unreturned.map(({ tx, item, itemIndex }, i) => (
                     <tr
                       key={`${tx.id}-${itemIndex}`}
-                      className="border-b border-[#2E2E2E] last:border-0 hover:bg-[#242424] transition-colors"
+                      className="border-b border-[var(--bg-hover)] last:border-0 hover:bg-[var(--bg-input)] transition-colors"
                     >
-                      <td className="px-4 py-3 text-[10px] text-[#9CA3AF] whitespace-nowrap">
+                      <td className="px-4 py-3 text-[10px] text-[var(--tx-muted)] whitespace-nowrap">
                         {formatDateTime(tx.timestamp)}
                       </td>
-                      <td className="px-4 py-3 text-white text-xs">{tx.staffName}</td>
+                      <td className="px-4 py-3 text-[var(--tx-primary)] text-xs">{tx.staffName}</td>
                       <td className="px-4 py-3">
-                        <p className="text-white text-xs font-medium">Team {tx.teamNumber}</p>
-                        <p className="text-[10px] text-[#9CA3AF]">{tx.contactName}</p>
+                        <p className="text-[var(--tx-primary)] text-xs font-medium">Team {tx.teamNumber}</p>
+                        <p className="text-[10px] text-[var(--tx-muted)]">{tx.contactName}</p>
                       </td>
-                      <td className="px-4 py-3 text-white text-xs">{item.partName}</td>
-                      <td className="px-4 py-3 text-[#9CA3AF] text-xs font-mono">{item.sku}</td>
-                      <td className="px-4 py-3 text-center text-white text-xs">{item.quantity}</td>
+                      <td className="px-4 py-3 text-[var(--tx-primary)] text-xs">{item.partName}</td>
+                      <td className="px-4 py-3 text-[var(--tx-muted)] text-xs font-mono">{item.sku}</td>
+                      <td className="px-4 py-3 text-center text-[var(--tx-primary)] text-xs">{item.quantity}</td>
                       <td className="px-4 py-3 text-right">
                         <button
                           onClick={() => setReturnTarget({ tx, itemIndex })}

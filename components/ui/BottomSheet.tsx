@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, ReactNode } from 'react';
 import { X } from 'lucide-react';
@@ -29,7 +29,7 @@ export function BottomSheet({ open, onClose, title, children, className }: Botto
       <div className="absolute inset-0 bg-black/70" onClick={onClose} aria-hidden="true" />
       <div
         className={cn(
-          'relative w-full bg-[#1A1A1A] border-t border-[#2E2E2E] rounded-t-2xl',
+          'relative w-full bg-[var(--bg-card)] border-t border-[var(--bg-hover)] rounded-t-2xl',
           'max-h-[65vh] flex flex-col shadow-2xl',
           className
         )}
@@ -38,14 +38,14 @@ export function BottomSheet({ open, onClose, title, children, className }: Botto
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-[#2E2E2E] rounded-full" />
+          <div className="w-10 h-1 bg-[var(--bg-hover)] rounded-full" />
         </div>
         {title && (
-          <div className="flex items-center justify-between px-6 py-3 border-b border-[#2E2E2E]">
-            <h2 className="font-display text-lg text-white">{title}</h2>
+          <div className="flex items-center justify-between px-6 py-3 border-b border-[var(--bg-hover)]">
+            <h2 className="font-display text-lg text-[var(--tx-primary)]">{title}</h2>
             <button
               onClick={onClose}
-              className="p-1 rounded-lg hover:bg-[#2E2E2E] text-[#9CA3AF] hover:text-white transition-colors"
+              className="p-1 rounded-lg hover:bg-[var(--bg-hover)] text-[var(--tx-muted)] hover:text-white transition-colors"
             >
               <X className="w-5 h-5" />
             </button>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, ReactNode } from 'react';
 import { X } from 'lucide-react';
@@ -49,7 +49,7 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
       {/* Panel */}
       <div
         className={cn(
-          'relative w-full bg-[#1A1A1A] border border-[#2E2E2E] shadow-2xl',
+          'relative w-full bg-[var(--bg-card)] border border-[var(--bg-hover)] shadow-2xl',
           'rounded-t-2xl sm:rounded-2xl overflow-hidden',
           'max-h-[90vh] flex flex-col',
           sizes[size],
@@ -57,11 +57,11 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
         )}
       >
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[#2E2E2E]">
-            <h2 className="font-display text-lg text-white">{title}</h2>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--bg-hover)]">
+            <h2 className="font-display text-lg text-[var(--tx-primary)]">{title}</h2>
             <button
               onClick={onClose}
-              className="p-1 rounded-lg hover:bg-[#2E2E2E] text-[#9CA3AF] hover:text-white transition-colors"
+              className="p-1 rounded-lg hover:bg-[var(--bg-hover)] text-[var(--tx-muted)] hover:text-white transition-colors"
             >
               <X className="w-5 h-5" />
             </button>

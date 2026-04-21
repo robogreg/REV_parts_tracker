@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ArrowUpDown, ArrowUp, ArrowDown, Search, ToggleLeft, ToggleRight } from 'lucide-react';
-import Image from 'next/image';
+import { ArrowUpDown, ArrowUp, ArrowDown, Search, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react';
 import { InventoryItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
@@ -16,6 +15,7 @@ interface InventoryTableProps {
   onToggleLoaner?: (itemId: string, value: boolean) => void;
   onUpdateThreshold?: (itemId: string, value: number) => void;
   onDelete?: (itemId: string) => void;
+  onBulkDelete?: (ids: string[]) => void;
 }
 
 export function InventoryTable({
@@ -24,6 +24,7 @@ export function InventoryTable({
   onToggleLoaner,
   onUpdateThreshold,
   onDelete,
+  onBulkDelete,
 }: InventoryTableProps) {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
@@ -31,6 +32,7 @@ export function InventoryTable({
   const [editingAvail, setEditingAvail] = useState<string | null>(null);
   const [editingThresh, setEditingThresh] = useState<string | null>(null);
   const [localValues, setLocalValues] = useState<Record<string, number>>({});
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   function handleSort(field: SortField) {
     if (sortField === field) {
@@ -70,6 +72,33 @@ export function InventoryTable({
     });
   }, [filtered, sortField, sortDir]);
 
+  const allVisibleIds = sorted.map((i) => i.id);
+  const allSelected = allVisibleIds.length > 0 && allVisibleIds.every((id) => selected.has(id));
+  const someSelected = selected.size > 0;
+
+  function toggleSelectAll() {
+    if (allSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(allVisibleIds));
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function handleBulkDelete() {
+    if (!onBulkDelete || selected.size === 0) return;
+    onBulkDelete([...selected]);
+    setSelected(new Set());
+  }
+
   function SortIcon({ field }: { field: SortField }) {
     if (sortField !== field) return <ArrowUpDown className="w-3 h-3 opacity-40" />;
     return sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />;
@@ -89,29 +118,54 @@ export function InventoryTable({
 
   return (
     <div>
-      {/* Search */}
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF] pointer-events-none" />
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Filter by name, SKU, category…"
-          className="w-full bg-[#242424] border border-[#2E2E2E] rounded-xl pl-9 pr-4 py-2 text-sm text-white placeholder-[#9CA3AF] outline-none focus:border-[#FF6B00] transition-colors"
-        />
+      {/* Search + bulk action bar */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--tx-muted)] pointer-events-none" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Filter by name, SKU, category…"
+            className="w-full bg-[var(--bg-input)] border border-[var(--bg-hover)] rounded-xl pl-9 pr-4 py-2 text-sm text-[var(--tx-primary)] placeholder-[var(--tx-muted)] outline-none focus:border-[#FF6B00] transition-colors"
+          />
+        </div>
+        {someSelected && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-input)] border border-[var(--bg-hover)] rounded-xl text-sm">
+            <span className="text-[var(--tx-muted)]">{selected.size} selected</span>
+            {onBulkDelete && (
+              <button
+                onClick={handleBulkDelete}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-900/30 hover:bg-red-900/50 border border-red-800/50 text-red-400 text-xs font-medium transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete selected
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#2E2E2E] text-xs text-[#9CA3AF]">
-              <th className="w-10 px-2 py-3" />
+            <tr className="border-b border-[var(--bg-hover)] text-xs text-[var(--tx-muted)]">
+              {/* Checkbox column */}
+              <th className="w-8 px-2 py-3">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleSelectAll}
+                  className="rounded border-[var(--bg-hover2)] accent-[#FF6B00]"
+                  title="Select all"
+                />
+              </th>
               <th className="text-left px-3 py-3">
                 <button
                   onClick={() => handleSort('name')}
                   className="flex items-center gap-1 hover:text-white transition-colors font-medium"
                 >
-                  Name <SortIcon field="name" />
+                  Name / SKU <SortIcon field="name" />
                 </button>
               </th>
               <th className="text-left px-3 py-3">
@@ -127,7 +181,7 @@ export function InventoryTable({
                   onClick={() => handleSort('quantityAvailable')}
                   className="flex items-center gap-1 hover:text-white transition-colors font-medium mx-auto"
                 >
-                  Available <SortIcon field="quantityAvailable" />
+                  Avail <SortIcon field="quantityAvailable" />
                 </button>
               </th>
               <th className="text-center px-3 py-3">
@@ -143,10 +197,10 @@ export function InventoryTable({
                   onClick={() => handleSort('remaining')}
                   className="flex items-center gap-1 hover:text-white transition-colors font-medium mx-auto"
                 >
-                  Remaining <SortIcon field="remaining" />
+                  Left <SortIcon field="remaining" />
                 </button>
               </th>
-              <th className="text-center px-3 py-3 font-medium">Low Stock</th>
+              <th className="text-center px-3 py-3 font-medium">Threshold</th>
               <th className="text-center px-3 py-3 font-medium">Loaner</th>
               {onDelete && <th className="px-3 py-3" />}
             </tr>
@@ -157,42 +211,44 @@ export function InventoryTable({
               const threshold = item.lowStockThreshold ?? 2;
               const isOut = remaining <= 0;
               const isLow = !isOut && remaining <= threshold;
+              const isSelected = selected.has(item.id);
+              const packSize = item.part.packSize ?? 1;
 
               return (
                 <tr
                   key={item.id}
                   className={cn(
-                    'border-b border-[#2E2E2E] transition-colors',
-                    isOut
+                    'border-b border-[var(--bg-hover)] transition-colors',
+                    isSelected
+                      ? 'bg-[#FF6B00]/10'
+                      : isOut
                       ? 'bg-red-950/20 hover:bg-red-950/30'
                       : isLow
                       ? 'bg-amber-950/20 hover:bg-amber-950/30'
-                      : 'hover:bg-[#242424]'
+                      : 'hover:bg-[var(--bg-input)]'
                   )}
                 >
-                  {/* Image */}
+                  {/* Checkbox */}
                   <td className="px-2 py-2">
-                    {item.part.imageUrl ? (
-                      <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#2E2E2E] flex-shrink-0">
-                        <Image
-                          src={item.part.imageUrl}
-                          alt={item.part.name}
-                          width={32}
-                          height={32}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-8 h-8 rounded-lg bg-[#2E2E2E] flex items-center justify-center">
-                        <span className="text-[#9CA3AF] text-[8px]">IMG</span>
-                      </div>
-                    )}
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleSelect(item.id)}
+                      className="rounded border-[var(--bg-hover2)] accent-[#FF6B00]"
+                    />
                   </td>
 
-                  {/* Name + SKU */}
+                  {/* Name + SKU + pack size */}
                   <td className="px-3 py-2">
-                    <p className="text-white font-medium text-sm leading-tight">{item.part.name}</p>
-                    <p className="text-[#9CA3AF] text-[11px] font-mono">{item.part.sku}</p>
+                    <p className="text-[var(--tx-primary)] font-medium text-sm leading-tight">{item.part.name}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <p className="text-[var(--tx-muted)] text-[11px] font-mono">{item.part.sku}</p>
+                      {packSize > 1 && (
+                        <span className="text-[9px] font-medium bg-[var(--bg-hover)] text-[var(--tx-muted)] px-1.5 py-0.5 rounded">
+                          pk{packSize}
+                        </span>
+                      )}
+                    </div>
                   </td>
 
                   {/* Category */}
@@ -216,7 +272,7 @@ export function InventoryTable({
                           if (e.key === 'Enter') commitAvail(item);
                           if (e.key === 'Escape') setEditingAvail(null);
                         }}
-                        className="w-16 bg-[#242424] border border-[#FF6B00] rounded-lg px-2 py-1 text-center text-white text-sm outline-none"
+                        className="w-16 bg-[var(--bg-input)] border border-[#FF6B00] rounded-lg px-2 py-1 text-center text-[var(--tx-primary)] text-sm outline-none"
                       />
                     ) : (
                       <button
@@ -224,7 +280,7 @@ export function InventoryTable({
                           setEditingAvail(item.id);
                           setLocalValues((v) => ({ ...v, [item.id]: item.quantityAvailable }));
                         }}
-                        className="text-white hover:text-[#FF6B00] transition-colors min-w-[2rem] text-center"
+                        className="text-[var(--tx-primary)] hover:text-[#FF6B00] transition-colors min-w-[2rem] text-center"
                         title="Click to edit"
                       >
                         {item.quantityAvailable}
@@ -233,7 +289,7 @@ export function InventoryTable({
                   </td>
 
                   {/* Given */}
-                  <td className="px-3 py-2 text-center text-white">{item.quantityGiven}</td>
+                  <td className="px-3 py-2 text-center text-[var(--tx-primary)]">{item.quantityGiven}</td>
 
                   {/* Remaining */}
                   <td className="px-3 py-2 text-center">
@@ -266,7 +322,7 @@ export function InventoryTable({
                           if (e.key === 'Enter') commitThresh(item);
                           if (e.key === 'Escape') setEditingThresh(null);
                         }}
-                        className="w-14 bg-[#242424] border border-[#FF6B00] rounded-lg px-2 py-1 text-center text-white text-sm outline-none"
+                        className="w-14 bg-[var(--bg-input)] border border-[#FF6B00] rounded-lg px-2 py-1 text-center text-[var(--tx-primary)] text-sm outline-none"
                       />
                     ) : (
                       <button
@@ -277,7 +333,7 @@ export function InventoryTable({
                             [item.id + '_thresh']: item.lowStockThreshold ?? 2,
                           }));
                         }}
-                        className="text-[#9CA3AF] hover:text-[#FF6B00] transition-colors min-w-[2rem]"
+                        className="text-[var(--tx-muted)] hover:text-[#FF6B00] transition-colors min-w-[2rem]"
                         title="Click to edit threshold"
                       >
                         ≤{item.lowStockThreshold ?? 2}
@@ -291,7 +347,7 @@ export function InventoryTable({
                       onClick={() => onToggleLoaner?.(item.id, !item.isLoaner)}
                       className={cn(
                         'transition-colors',
-                        item.isLoaner ? 'text-[#FF6B00]' : 'text-[#9CA3AF] hover:text-white'
+                        item.isLoaner ? 'text-[#FF6B00]' : 'text-[var(--tx-muted)] hover:text-white'
                       )}
                       title={item.isLoaner ? 'Loaner (click to disable)' : 'Not loaner (click to enable)'}
                     >
@@ -303,12 +359,12 @@ export function InventoryTable({
                     </button>
                   </td>
 
-                  {/* Delete */}
+                  {/* Per-row delete */}
                   {onDelete && (
                     <td className="px-3 py-2 text-center">
                       <button
                         onClick={() => onDelete(item.id)}
-                        className="text-[#9CA3AF] hover:text-red-400 text-xs transition-colors"
+                        className="text-[var(--tx-muted)] hover:text-red-400 text-xs transition-colors"
                       >
                         Remove
                       </button>
@@ -321,7 +377,7 @@ export function InventoryTable({
         </table>
 
         {sorted.length === 0 && (
-          <div className="py-12 text-center text-[#9CA3AF] text-sm">No inventory items found.</div>
+          <div className="py-12 text-center text-[var(--tx-muted)] text-sm">No inventory items found.</div>
         )}
       </div>
     </div>

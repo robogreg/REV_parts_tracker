@@ -3,8 +3,8 @@ import { requireAuth, handleApiError } from '@/lib/api-helpers';
 import { getFirstEvents } from '@/lib/first-api';
 
 // GET /api/first/events?program=FRC&season=2025
-// Proxies FIRST API events. Response cached for 1 hour via Next.js revalidation.
-export const revalidate = 3600;
+// Proxies FIRST API events. Dynamic so each program/season combination is fetched fresh.
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {

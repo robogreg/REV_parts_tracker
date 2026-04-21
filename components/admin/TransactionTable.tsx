@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, Package, RotateCcw } from 'lucide-react';
@@ -62,7 +62,7 @@ export function TransactionTable({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#2E2E2E] text-[#9CA3AF] text-xs">
+            <tr className="border-b border-[var(--bg-hover)] text-[var(--tx-muted)] text-xs">
               <th className="w-8 px-2 py-3" />
               <th className="text-left px-3 py-3 font-medium">Timestamp</th>
               <th className="text-left px-3 py-3 font-medium">Staff</th>
@@ -83,28 +83,28 @@ export function TransactionTable({
                   <tr
                     key={tx.id}
                     onClick={() => toggle(tx.id)}
-                    className="border-b border-[#2E2E2E] hover:bg-[#242424] cursor-pointer transition-colors"
+                    className="border-b border-[var(--bg-hover)] hover:bg-[var(--bg-input)] cursor-pointer transition-colors"
                   >
-                    <td className="px-2 py-3 text-[#9CA3AF]">
+                    <td className="px-2 py-3 text-[var(--tx-muted)]">
                       {isOpen ? (
                         <ChevronDown className="w-4 h-4" />
                       ) : (
                         <ChevronRight className="w-4 h-4" />
                       )}
                     </td>
-                    <td className="px-3 py-3 text-[#9CA3AF] whitespace-nowrap text-xs">
+                    <td className="px-3 py-3 text-[var(--tx-muted)] whitespace-nowrap text-xs">
                       {formatDateTime(tx.timestamp)}
                     </td>
                     <td className="px-3 py-3">
-                      <p className="text-white font-medium">{tx.staffName}</p>
-                      <p className="text-[10px] text-[#9CA3AF]">{tx.staffEmail}</p>
+                      <p className="text-[var(--tx-primary)] font-medium">{tx.staffName}</p>
+                      <p className="text-[10px] text-[var(--tx-muted)]">{tx.staffEmail}</p>
                     </td>
                     <td className="px-3 py-3">
-                      <p className="text-white font-medium">Team {tx.teamNumber}</p>
-                      <p className="text-[10px] text-[#9CA3AF] truncate max-w-[140px]">{tx.teamName}</p>
+                      <p className="text-[var(--tx-primary)] font-medium">Team {tx.teamNumber}</p>
+                      <p className="text-[10px] text-[var(--tx-muted)] truncate max-w-[140px]">{tx.teamName}</p>
                     </td>
-                    <td className="px-3 py-3 text-center text-white">{tx.items.length}</td>
-                    <td className="px-3 py-3 text-center text-white">{tx.totalItems}</td>
+                    <td className="px-3 py-3 text-center text-[var(--tx-primary)]">{tx.items.length}</td>
+                    <td className="px-3 py-3 text-center text-[var(--tx-primary)]">{tx.totalItems}</td>
                     <td className="px-3 py-3 text-center">
                       {hasLoaners ? (
                         <Badge variant="warning">
@@ -112,31 +112,31 @@ export function TransactionTable({
                           {loanerCount}
                         </Badge>
                       ) : (
-                        <span className="text-[#9CA3AF] text-xs">—</span>
+                        <span className="text-[var(--tx-muted)] text-xs">—</span>
                       )}
                     </td>
                   </tr>
 
                   {/* Expanded detail row */}
                   {isOpen && (
-                    <tr key={`${tx.id}-expanded`} className="bg-[#141414]">
+                    <tr key={`${tx.id}-expanded`} className="bg-[var(--bg-deep)]">
                       <td colSpan={7} className="px-6 py-4">
                         <div className="mb-2">
-                          <p className="text-xs text-[#9CA3AF]">
-                            Contact: <span className="text-white">{tx.contactName}</span>{' '}
+                          <p className="text-xs text-[var(--tx-muted)]">
+                            Contact: <span className="text-[var(--tx-primary)]">{tx.contactName}</span>{' '}
                             {tx.contactEmail && (
-                              <span className="text-[#9CA3AF]">({tx.contactEmail})</span>
+                              <span className="text-[var(--tx-muted)]">({tx.contactEmail})</span>
                             )}
                           </p>
                           {tx.reason && (
-                            <p className="text-xs text-[#9CA3AF] mt-0.5">
-                              Reason: <span className="text-white">{tx.reason}</span>
+                            <p className="text-xs text-[var(--tx-muted)] mt-0.5">
+                              Reason: <span className="text-[var(--tx-primary)]">{tx.reason}</span>
                             </p>
                           )}
                         </div>
                         <table className="w-full text-xs">
                           <thead>
-                            <tr className="text-[#9CA3AF] border-b border-[#2E2E2E]">
+                            <tr className="text-[var(--tx-muted)] border-b border-[var(--bg-hover)]">
                               <th className="text-left py-1.5 font-medium">Part</th>
                               <th className="text-left py-1.5 font-medium">SKU</th>
                               <th className="text-center py-1.5 font-medium">Qty</th>
@@ -145,17 +145,17 @@ export function TransactionTable({
                           </thead>
                           <tbody>
                             {tx.items.map((item, idx) => (
-                              <tr key={idx} className="border-b border-[#2E2E2E]/50">
-                                <td className="py-1.5 text-white">{item.partName}</td>
-                                <td className="py-1.5 text-[#9CA3AF] font-mono">{item.sku}</td>
-                                <td className="py-1.5 text-center text-white">{item.quantity}</td>
+                              <tr key={idx} className="border-b border-[var(--bg-hover)]/50">
+                                <td className="py-1.5 text-[var(--tx-primary)]">{item.partName}</td>
+                                <td className="py-1.5 text-[var(--tx-muted)] font-mono">{item.sku}</td>
+                                <td className="py-1.5 text-center text-[var(--tx-primary)]">{item.quantity}</td>
                                 <td className="py-1.5 text-center">
                                   {item.isLoaner ? (
                                     <Badge variant={item.loanerReturned ? 'success' : 'warning'}>
                                       {item.loanerReturned ? 'Returned' : 'Out'}
                                     </Badge>
                                   ) : (
-                                    <span className="text-[#9CA3AF]">—</span>
+                                    <span className="text-[var(--tx-muted)]">—</span>
                                   )}
                                 </td>
                               </tr>
@@ -174,22 +174,22 @@ export function TransactionTable({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-[#2E2E2E]">
-          <p className="text-xs text-[#9CA3AF]">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--bg-hover)]">
+          <p className="text-xs text-[var(--tx-muted)]">
             Page {page + 1} of {totalPages} · {total} total
           </p>
           <div className="flex gap-2">
             <button
               disabled={page === 0}
               onClick={() => onPageChange(page - 1)}
-              className="px-3 py-1.5 text-xs rounded-lg bg-[#2E2E2E] text-white disabled:opacity-40 hover:bg-[#3E3E3E] transition-colors"
+              className="px-3 py-1.5 text-xs rounded-lg bg-[var(--bg-hover)] text-[var(--tx-primary)] disabled:opacity-40 hover:bg-[var(--bg-hover2)] transition-colors"
             >
               Previous
             </button>
             <button
               disabled={page >= totalPages - 1}
               onClick={() => onPageChange(page + 1)}
-              className="px-3 py-1.5 text-xs rounded-lg bg-[#2E2E2E] text-white disabled:opacity-40 hover:bg-[#3E3E3E] transition-colors"
+              className="px-3 py-1.5 text-xs rounded-lg bg-[var(--bg-hover)] text-[var(--tx-primary)] disabled:opacity-40 hover:bg-[var(--bg-hover2)] transition-colors"
             >
               Next
             </button>
