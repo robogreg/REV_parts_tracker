@@ -8,11 +8,26 @@ export type PartCondition = 'new' | 'used' | 'damaged';
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
+export type UserRole = 'user' | 'manager' | 'superadmin';
+
+/** Record stored in Firestore `users/{uid}` collection */
+export interface StoredUser {
+  uid: string;
+  email: string;
+  name: string;
+  photoUrl?: string;
+  role: UserRole;
+  firstLogin: string;
+  lastLogin: string;
+}
+
 export interface RevUser {
   uid: string;
   email: string;
   name: string;
   photoUrl?: string;
+  role: UserRole;
+  /** Convenience: true when role is 'manager' or 'superadmin' */
   isAdmin: boolean;
   idToken: string;
 }

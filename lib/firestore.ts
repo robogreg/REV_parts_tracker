@@ -5,7 +5,7 @@
  * server-side operations that have already been auth-checked by requireAuth().
  */
 import { adminDb } from './firebase-admin';
-import type { RevEvent, InventoryItem, Team, Transaction, Part, AdminLog } from './types';
+import type { RevEvent, InventoryItem, Team, Transaction, Part, AdminLog, StoredUser, UserRole } from './types';
 import { generateId } from './utils';
 import { FieldValue } from 'firebase-admin/firestore';
 
@@ -236,6 +236,49 @@ export async function getSettings(): Promise<AppSettings> {
 
 export async function updateSettings(data: Partial<AppSettings>): Promise<void> {
   await adminDb().collection('config').doc('settings').set(data, { merge: true });
+}
+
+// ─── Users ───────────────────────────────────────────────────────────────────
+
+const SUPER_ADMIN_EMAIL = 'greg@revrobotics.com';
+
+export async function getUsers(): Promise<StoredUser[]> {
+  const snap = await adminDb().collection('users').orderBy('lastLogin', 'desc').get();
+  return snap.docs.map((d) => d.data() as StoredUser);
+}
+
+export async function getUserByUid(uid: string): Promise<StoredUser | null> {
+  const snap = await adminDb().collection('users').doc(uid).get();
+  return snap.exists ? (snap.data() as StoredUser) : null;
+}
+
+/**
+ * Called on every login. Creates the user doc if it doesn't exist (defaulting to 'user' role),
+ * or updates name/photo/lastLogin if it does. Never downgrades an existing role.
+ */
+export async function upsertUserLogin(
+  data: Pick<StoredUser, 'uid' | 'email' | 'name' | 'photoUrl'>
+): Promise<StoredUser> {
+  const ref = adminDb().collection('users').doc(data.uid);
+  const snap = await ref.get();
+  const now = new Date().toISOString();
+
+  if (snap.exists) {
+    const existing = snap.data() as StoredUser;
+    // Superadmin email always stays superadmin
+    const role: UserRole = data.email === SUPER_ADMIN_EMAIL ? 'superadmin' : existing.role;
+    await ref.update({ name: data.name, photoUrl: data.photoUrl ?? null, lastLogin: now, role });
+    return { ...existing, name: data.name, photoUrl: data.photoUrl, lastLogin: now, role };
+  }
+
+  const role: UserRole = data.email === SUPER_ADMIN_EMAIL ? 'superadmin' : 'user';
+  const newUser: StoredUser = { ...data, role, firstLogin: now, lastLogin: now };
+  await ref.set(newUser);
+  return newUser;
+}
+
+export async function updateUserRole(uid: string, role: UserRole): Promise<void> {
+  await adminDb().collection('users').doc(uid).update({ role });
 }
 
 // ─── Admin Logs ───────────────────────────────────────────────────────────────

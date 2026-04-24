@@ -1,9 +1,9 @@
-﻿'use client';
+'use client';
 
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, CalendarDays, BarChart3, LogOut, ChevronRight, Settings, Sun, Moon, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, BarChart3, LogOut, ChevronRight, Settings, Sun, Moon, ArrowLeft, Users } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useTheme } from '@/components/ThemeProvider';
 import { Spinner } from '@/components/ui/Spinner';
@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true, superAdminOnly: false },
   { href: '/admin/events', label: 'Events', icon: CalendarDays, exact: false, superAdminOnly: false },
   { href: '/admin/reports', label: 'Reports', icon: BarChart3, exact: false, superAdminOnly: false },
+  { href: '/admin/users', label: 'Users', icon: Users, exact: false, superAdminOnly: true },
   { href: '/admin/settings', label: 'Settings', icon: Settings, exact: false, superAdminOnly: true },
 ];
 
@@ -45,6 +46,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return pathname.startsWith(item.href);
   }
 
+  const isSuperAdmin = user.email === SUPER_ADMIN_EMAIL;
+  const visibleNavItems = NAV_ITEMS.filter((item) => !item.superAdminOnly || isSuperAdmin);
+
   return (
     <div className="min-h-screen bg-[var(--bg-base)] flex">
       {/* ── Sidebar (desktop lg+) ─────────────────────────────────────── */}
@@ -64,7 +68,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Nav */}
         <nav className="flex-1 py-4 px-2 space-y-0.5">
-          {NAV_ITEMS.filter((item) => !item.superAdminOnly || user.email === SUPER_ADMIN_EMAIL).map((item) => {
+          {visibleNavItems.map((item) => {
             const active = isActive(item);
             return (
               <Link
@@ -145,7 +149,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* ── Mobile bottom tabs ──────────────────────────────────────────── */}
         <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-[var(--bg-card)] border-t border-[var(--bg-hover)] flex z-40">
-          {NAV_ITEMS.filter((item) => !item.superAdminOnly || user.email === SUPER_ADMIN_EMAIL).map((item) => {
+          {visibleNavItems.map((item) => {
             const active = isActive(item);
             return (
               <Link

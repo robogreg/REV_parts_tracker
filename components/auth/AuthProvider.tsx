@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
-import { RevUser } from '@/lib/types';
+import { RevUser, UserRole } from '@/lib/types';
 import { useAppStore } from '@/lib/store';
 
 interface AuthContextValue {
@@ -22,24 +22,36 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '')
-  .split(',')
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
-
 async function buildRevUser(firebaseUser: User): Promise<RevUser | null> {
   const email = firebaseUser.email ?? '';
   if (!email.endsWith('@revrobotics.com')) {
     await signOut(auth);
     return null;
   }
+
   const idToken = await firebaseUser.getIdToken();
+
+  // Fetch (and upsert) this user's role from Firestore via the server
+  let role: UserRole = 'user';
+  try {
+    const res = await fetch('/api/auth/me', {
+      headers: { Authorization: `Bearer ${idToken}` },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      role = data.role as UserRole;
+    }
+  } catch {
+    // Network failure — default to 'user' (they'll just see checkout)
+  }
+
   return {
     uid: firebaseUser.uid,
     email,
     name: firebaseUser.displayName ?? email,
     photoUrl: firebaseUser.photoURL ?? undefined,
-    isAdmin: ADMIN_EMAILS.includes(email.toLowerCase()),
+    role,
+    isAdmin: role === 'manager' || role === 'superadmin',
     idToken,
   };
 }
