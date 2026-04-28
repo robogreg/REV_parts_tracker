@@ -29,6 +29,11 @@ export function CartItem({ item }: CartItemProps) {
               {packCount} pack{packCount !== 1 ? 's' : ''} ({unitTotal} units)
             </p>
           )}
+          {item.notes && (
+            <p className="text-xs text-[var(--tx-muted)] mt-0.5 italic truncate" title={item.notes}>
+              {item.notes}
+            </p>
+          )}
         </div>
         <button
           onClick={() => removeItem(item.part.id)}

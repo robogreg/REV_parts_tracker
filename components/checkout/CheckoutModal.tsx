@@ -60,6 +60,7 @@ export function CheckoutModal({ open, onClose, onSuccess }: CheckoutModalProps) 
       unitType: ci.unitType,
       isLoaner: ci.isLoaner,
       condition: ci.condition ?? 'new',
+      notes: ci.notes,
     }));
 
     const tx: Transaction = {
@@ -184,12 +185,15 @@ export function CheckoutModal({ open, onClose, onSuccess }: CheckoutModalProps) 
           </h3>
           <div className="bg-[var(--bg-base)] rounded-lg divide-y divide-[var(--bg-hover)]">
             {cartItems.map((item) => (
-              <div key={item.part.id} className="flex items-center justify-between px-3 py-2.5">
-                <div>
+              <div key={item.part.id} className="flex items-start justify-between px-3 py-2.5">
+                <div className="flex-1 min-w-0 mr-3">
                   <p className="text-sm text-[var(--tx-primary)]">{item.part.name}</p>
                   <p className="text-xs font-mono text-[var(--tx-muted)]">{item.part.sku}</p>
+                  {item.notes && (
+                    <p className="text-xs text-[var(--tx-muted)] italic mt-0.5">{item.notes}</p>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-sm font-semibold text-[var(--tx-primary)]">×{item.quantity}</span>
                   {item.isLoaner && <Lock className="w-3.5 h-3.5 text-[#FF6B00]" />}
                 </div>

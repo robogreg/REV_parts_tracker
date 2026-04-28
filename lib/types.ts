@@ -105,6 +105,8 @@ export interface TransactionItem {
   loanerReturned?: boolean;
   loanerReturnedAt?: string;
   condition?: PartCondition;
+  /** Free-text comment, used on custom/unlisted parts */
+  notes?: string;
 }
 
 export interface Transaction {
@@ -136,6 +138,8 @@ export interface CartItem {
   unitType: UnitType;
   isLoaner: boolean;
   condition?: PartCondition;
+  /** Free-text comment, used on custom/unlisted parts */
+  notes?: string;
 }
 
 // ─── FIRST API types ──────────────────────────────────────────────────────────

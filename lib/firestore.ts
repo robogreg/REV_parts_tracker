@@ -185,6 +185,8 @@ export async function createTransaction(tx: Transaction): Promise<Transaction> {
   batch.set(adminDb().collection('transactions').doc(tx.id), { ...tx, syncStatus: 'synced' });
 
   for (const item of tx.items) {
+    // Custom/unlisted parts (ids prefixed "custom-") have no inventory doc — skip.
+    if (item.partId.startsWith('custom-')) continue;
     const invRef = adminDb()
       .collection('events').doc(tx.eventId).collection('inventory').doc(item.partId);
     batch.update(invRef, { quantityGiven: FieldValue.increment(item.quantity) });

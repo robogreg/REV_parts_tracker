@@ -2,6 +2,7 @@
 
 import { InventoryItem } from '@/lib/types';
 import { PartCard } from './PartCard';
+import { CustomPartCard } from './CustomPartCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Package } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
@@ -35,21 +36,28 @@ export function PartsGrid({ items, loading, searchQuery, selectedCategory }: Par
 
   if (filtered.length === 0) {
     return (
-      <EmptyState
-        icon={Package}
-        title={searchQuery || selectedCategory ? 'No parts found' : 'No inventory loaded'}
-        description={
-          searchQuery || selectedCategory
-            ? 'Try a different search or category'
-            : 'Ask an admin to upload inventory for this event'
-        }
-        className="flex-1"
-      />
+      <div className="flex flex-col">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 p-4">
+          <CustomPartCard />
+        </div>
+        <EmptyState
+          icon={Package}
+          title={searchQuery || selectedCategory ? 'No parts found' : 'No inventory loaded'}
+          description={
+            searchQuery || selectedCategory
+              ? 'Try a different search or category'
+              : 'Ask an admin to upload inventory for this event'
+          }
+          className="flex-1"
+        />
+      </div>
     );
   }
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 p-4">
+      {/* Custom/unlisted part card — always pinned at top */}
+      <CustomPartCard />
       {filtered.map((item) => (
         <PartCard key={item.id} item={item} />
       ))}
