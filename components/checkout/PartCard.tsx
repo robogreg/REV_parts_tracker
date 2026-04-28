@@ -1,8 +1,7 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
-import { Lock, AlertTriangle, Package, Wrench, Cpu, Zap } from 'lucide-react';
+import { Lock, AlertTriangle } from 'lucide-react';
 import { InventoryItem } from '@/lib/types';
 import { useCartStore } from '@/lib/store';
 import { QuantityControl } from '@/components/ui/QuantityControl';
@@ -13,14 +12,6 @@ interface PartCardProps {
   item: InventoryItem;
 }
 
-function CategoryIcon({ category }: { category: string }) {
-  const cat = category.toLowerCase();
-  if (cat.includes('motor')) return <Zap className="w-8 h-8 text-[#FF6B00]" />;
-  if (cat.includes('electronic') || cat.includes('sensor')) return <Cpu className="w-8 h-8 text-[#FF6B00]" />;
-  if (cat.includes('hardware') || cat.includes('mechanic')) return <Wrench className="w-8 h-8 text-[#FF6B00]" />;
-  return <Package className="w-8 h-8 text-[#FF6B00]" />;
-}
-
 function StockBadge({ remaining, threshold }: { remaining: number; threshold?: number }) {
   if (remaining <= 0) {
     return (
@@ -29,14 +20,7 @@ function StockBadge({ remaining, threshold }: { remaining: number; threshold?: n
       </span>
     );
   }
-  if (threshold && remaining <= threshold) {
-    return (
-      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-900/50 text-amber-400">
-        {remaining} left
-      </span>
-    );
-  }
-  if (remaining <= 10) {
+  if ((threshold && remaining <= threshold) || remaining <= 10) {
     return (
       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-900/50 text-amber-400">
         {remaining} left
@@ -56,7 +40,6 @@ export function PartCard({ item }: PartCardProps) {
   const packSize = part.packSize ?? 1;
   const hasPack = packSize > 1;
 
-  // For -pk items, track whether the user wants to give a full pack or individuals
   const [giveAsPack, setGiveAsPack] = useState(hasPack);
 
   const cartItems = useCartStore((s) => s.items);
@@ -74,7 +57,6 @@ export function PartCard({ item }: PartCardProps) {
         duration: 5000,
       });
     }
-    // When giving as a full pack, quantity represents 1 pack = packSize individual units
     addItem({
       part,
       inventoryItem: item,
@@ -92,41 +74,23 @@ export function PartCard({ item }: PartCardProps) {
         remaining <= 0 && 'opacity-60'
       )}
     >
-      {/* Image */}
-      <div className="relative aspect-square bg-[var(--bg-base)] flex items-center justify-center">
-        {part.imageUrl ? (
-          <Image
-            src={part.imageUrl}
-            alt={part.name}
-            fill
-            className="object-contain p-2"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
-        ) : (
-          <CategoryIcon category={part.category} />
-        )}
-        {/* Loaner badge */}
-        {isLoaner && (
-          <div className="absolute top-2 left-2 bg-[#FF6B00]/20 border border-[#FF6B00]/40 rounded-full p-1">
-            <Lock className="w-3 h-3 text-[#FF6B00]" />
-          </div>
-        )}
-        {/* Low stock warning */}
-        {lowStockThreshold && remaining > 0 && remaining <= lowStockThreshold && (
-          <div className="absolute top-2 right-2 text-amber-400">
-            <AlertTriangle className="w-4 h-4" />
-          </div>
-        )}
-      </div>
-
-      {/* Info */}
       <div className="p-3 flex flex-col gap-2 flex-1">
-        <div>
-          <p className="text-sm font-semibold text-[var(--tx-primary)] leading-tight line-clamp-2">{part.name}</p>
-          <p className="text-xs font-mono text-[var(--tx-muted)] mt-0.5">{part.sku}</p>
+        {/* Name + badges row */}
+        <div className="flex items-start justify-between gap-1.5 min-h-0">
+          <p className="text-sm font-semibold text-[var(--tx-primary)] leading-tight line-clamp-3 flex-1">
+            {part.name}
+          </p>
+          <div className="flex items-center gap-1 flex-shrink-0 mt-0.5">
+            {isLoaner && <Lock className="w-3 h-3 text-[#FF6B00]" />}
+            {lowStockThreshold && remaining > 0 && remaining <= lowStockThreshold && (
+              <AlertTriangle className="w-3 h-3 text-amber-400" />
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center justify-between">
+        {/* SKU + stock */}
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[11px] font-mono text-[var(--tx-muted)] truncate">{part.sku}</p>
           <StockBadge remaining={remaining} threshold={lowStockThreshold} />
         </div>
 

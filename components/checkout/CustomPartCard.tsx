@@ -110,7 +110,7 @@ export function CustomPartCard() {
 
   return (
     <>
-      {/* Card */}
+      {/* Card — compact, matches PartCard layout */}
       <div
         className={cn(
           'bg-[var(--bg-card)] border-2 border-dashed border-[var(--bg-hover)] rounded-xl overflow-hidden flex flex-col',
@@ -118,26 +118,17 @@ export function CustomPartCard() {
         )}
         onClick={handleOpen}
       >
-        {/* Icon area */}
-        <div className="aspect-square bg-[var(--bg-base)] flex items-center justify-center">
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-12 h-12 rounded-full bg-[#FF6B00]/10 group-hover:bg-[#FF6B00]/20 transition-colors flex items-center justify-center">
-              <PenLine className="w-6 h-6 text-[#FF6B00]" />
-            </div>
-          </div>
-        </div>
-
-        {/* Info */}
         <div className="p-3 flex flex-col gap-2 flex-1">
-          <div>
-            <p className="text-sm font-semibold text-[var(--tx-primary)] leading-tight">
+          <div className="flex items-start justify-between gap-1.5">
+            <p className="text-sm font-semibold text-[var(--tx-primary)] leading-tight flex-1">
               Custom / Unlisted Part
             </p>
-            <p className="text-xs text-[var(--tx-muted)] mt-0.5">Enter SKU suffix &amp; qty</p>
+            <PenLine className="w-3.5 h-3.5 text-[#FF6B00] flex-shrink-0 mt-0.5" />
           </div>
+          <p className="text-[11px] font-mono text-[var(--tx-muted)]">Enter SKU + qty</p>
           <button
             onClick={(e) => { e.stopPropagation(); handleOpen(); }}
-            className="w-full py-2 rounded-lg bg-[var(--bg-hover)] hover:bg-[#FF6B00] text-[var(--tx-muted)] hover:text-[var(--tx-primary)] text-sm font-semibold transition-colors"
+            className="w-full py-2 rounded-lg bg-[var(--bg-hover)] hover:bg-[#FF6B00] text-[var(--tx-muted)] hover:text-[var(--tx-primary)] text-sm font-semibold transition-colors mt-auto"
           >
             Add
           </button>
