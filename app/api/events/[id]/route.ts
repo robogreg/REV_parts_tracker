@@ -1,19 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, handleApiError } from '@/lib/api-helpers';
+import { requireAuth, requireManager, handleApiError } from '@/lib/api-helpers';
 import {
   getEvent,
   updateEvent,
-  deleteEvent,
+  deleteEventCascade,
   saveInventorySnapshot,
   createAdminLog,
-  getTransactions,
 } from '@/lib/firestore';
 import type { RevEvent } from '@/lib/types';
-
-function isAdmin(email: string): boolean {
-  const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '').split(',').map((e) => e.trim());
-  return adminEmails.includes(email);
-}
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -30,13 +24,10 @@ export async function GET(request: NextRequest, context: RouteContext): Promise<
   }
 }
 
-// PATCH /api/events/:id (admin only)
+// PATCH /api/events/:id (manager+ only)
 export async function PATCH(request: NextRequest, context: RouteContext): Promise<NextResponse> {
   try {
-    const auth = await requireAuth(request);
-    if (!isAdmin(auth.email)) {
-      return NextResponse.json({ error: 'Forbidden: admins only' }, { status: 403 });
-    }
+    const auth = await requireManager(request);
     const { id } = await context.params;
     const body = (await request.json()) as Partial<RevEvent>;
 
@@ -61,25 +52,15 @@ export async function PATCH(request: NextRequest, context: RouteContext): Promis
   }
 }
 
-// DELETE /api/events/:id (admin only)
+// DELETE /api/events/:id (manager+ only)
 export async function DELETE(request: NextRequest, context: RouteContext): Promise<NextResponse> {
   try {
-    const auth = await requireAuth(request);
-    if (!isAdmin(auth.email)) {
-      return NextResponse.json({ error: 'Forbidden: admins only' }, { status: 403 });
-    }
+    const auth = await requireManager(request);
     const { id } = await context.params;
 
-    // Refuse if any transactions reference this event
-    const { transactions } = await getTransactions({ eventId: id, limit: 1 });
-    if (transactions.length > 0) {
-      return NextResponse.json(
-        { error: 'Cannot delete event: transactions exist for this event' },
-        { status: 409 }
-      );
-    }
-
-    await deleteEvent(id);
+    // Cascade-deletes the event doc, inventory subcollection, teams subcollection,
+    // and all transactions for this event
+    await deleteEventCascade(id);
 
     await createAdminLog({
       timestamp: new Date().toISOString(),

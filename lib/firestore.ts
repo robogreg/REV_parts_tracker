@@ -39,6 +39,30 @@ export async function deleteEvent(id: string): Promise<void> {
   await adminDb().collection('events').doc(id).delete();
 }
 
+/**
+ * Cascade-deletes an event and all associated subcollections (inventory, teams)
+ * and top-level transactions that reference it.
+ */
+export async function deleteEventCascade(id: string): Promise<void> {
+  const db = adminDb();
+
+  // Fetch all associated docs in parallel
+  const [inventorySnap, teamsSnap, txSnap] = await Promise.all([
+    db.collection('events').doc(id).collection('inventory').get(),
+    db.collection('events').doc(id).collection('teams').get(),
+    db.collection('transactions').where('eventId', '==', id).get(),
+  ]);
+
+  // Delete everything in parallel (batching would be needed for >500 docs,
+  // but a robotics event won't realistically hit that limit)
+  await Promise.all([
+    ...inventorySnap.docs.map((d) => d.ref.delete()),
+    ...teamsSnap.docs.map((d) => d.ref.delete()),
+    ...txSnap.docs.map((d) => d.ref.delete()),
+    db.collection('events').doc(id).delete(),
+  ]);
+}
+
 // ─── Inventory ────────────────────────────────────────────────────────────────
 
 export async function getInventory(eventId: string): Promise<InventoryItem[]> {

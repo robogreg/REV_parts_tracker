@@ -58,7 +58,7 @@ if (process.env.NODE_ENV === 'production') {
         },
       },
       {
-        urlPattern: /^https:\/\/ftc-events\.firstinspires\.org\/v2\.0\//,
+        urlPattern: /^https:\/\/ftc-api\.firstinspires\.org\/v2\.0\//,
         handler: 'NetworkFirst',
         options: {
           cacheName: 'first-ftc-api-cache',

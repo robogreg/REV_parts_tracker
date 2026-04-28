@@ -5,7 +5,7 @@ import type { FirstEvent, FirstTeam } from './types';
 
 const BASE_URLS = {
   FRC: 'https://frc-api.firstinspires.org/v2.0',
-  FTC: 'https://ftc-events.firstinspires.org/v2.0',
+  FTC: 'https://ftc-api.firstinspires.org/v2.0',
 } as const;
 
 // Use Buffer (Node.js) rather than btoa (browser) for reliable server-side encoding.
@@ -118,7 +118,8 @@ interface FrcTeamRaw {
 // ─── FTC response shapes ──────────────────────────────────────────────────────
 
 interface FtcEventsResponse {
-  events: FtcEventRaw[];
+  events?: FtcEventRaw[];   // lowercase (v2 spec)
+  Events?: FtcEventRaw[];   // uppercase fallback
   eventCount: number;
   pageCurrent?: number;
   pageTotal?: number;
@@ -137,8 +138,10 @@ interface FtcEventRaw {
 }
 
 interface FtcTeamsResponse {
-  teams: FtcTeamRaw[];
-  teamCountTotal: number;
+  teams?: FtcTeamRaw[];   // lowercase (v2 spec)
+  Teams?: FtcTeamRaw[];   // uppercase fallback
+  teamCountTotal?: number;
+  teamCount?: number;
   pageCurrent?: number;
   pageTotal?: number;
 }
@@ -200,7 +203,7 @@ export async function getFirstEvents(
         `/${season}/events?page=${page}`
       );
       pageTotal = data.pageTotal ?? 1;
-      for (const e of data.events ?? []) {
+      for (const e of data.events ?? data.Events ?? []) {
         allEvents.push({
           code: e.code,
           name: e.name,
@@ -263,7 +266,7 @@ export async function getFirstTeams(
         `/${season}/teams?eventCode=${eventCode}&page=${page}`
       );
       pageTotal = data.pageTotal ?? 1;
-      for (const t of data.teams ?? []) {
+      for (const t of data.teams ?? data.Teams ?? []) {
         allTeams.push({
           teamNumber: t.teamNumber,
           nameShort: t.nameShort,

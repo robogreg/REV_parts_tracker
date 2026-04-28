@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 const BASE_URLS = {
   FRC: 'https://frc-api.firstinspires.org/v2.0',
-  FTC: 'https://ftc-events.firstinspires.org/v2.0',
+  FTC: 'https://ftc-api.firstinspires.org/v2.0',
 } as const;
 
 // GET /api/first/events/test?program=FRC&season=2026&key=<base64>

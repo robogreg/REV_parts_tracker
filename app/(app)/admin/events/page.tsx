@@ -43,7 +43,10 @@ export default function EventsListPage() {
     mutationFn: async (eventId: string) => {
       const headers = await getAuthHeaders();
       const res = await fetch(`/api/events/${eventId}`, { method: 'DELETE', headers });
-      if (!res.ok) throw new Error('Delete failed');
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Delete failed');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
